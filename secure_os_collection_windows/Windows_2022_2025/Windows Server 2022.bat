@@ -1,23 +1,23 @@
-ï»¿@echo off
+@echo off
 chcp 65001>nul & setlocal enabledelayedexpansion
-rem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-rem  Windows Server 2022 ë³´ì•ˆ ì„¤ì • ìžë™í™” ë°°ì¹˜
-rem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+rem ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+rem  Windows Server 2022 º¸¾È ¼³Á¤ ÀÚµ¿È­ ¹èÄ¡
+rem ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
-rem í˜„ìž¬ BAT ìœ„ì¹˜ë¡œ ì´ë™
+rem ÇöÀç BAT À§Ä¡·Î ÀÌµ¿
 cd /d "%~dp0"
 
-rem ê¸°ì¡´ ì‹¤í–‰ì •ì±…(CurrentUser) ë°±ì—…
+rem ±âÁ¸ ½ÇÇàÁ¤Ã¥(CurrentUser) ¹é¾÷
 for /f "delims=" %%a in ('
   powershell -NoProfile -Command "Get-ExecutionPolicy -Scope CurrentUser"
 ') do set "OLDPOLICY=%%a"
 if "%OLDPOLICY%"=="" set "OLDPOLICY=Undefined"
 
-rem PowerShell ìŠ¤í¬ë¦½íŠ¸ ì‹¤í–‰ (ì •ì±… ë³€ê²½ ì—†ì´ Bypass ì‚¬ìš©)
+rem PowerShell ½ºÅ©¸³Æ® ½ÇÇà (Á¤Ã¥ º¯°æ ¾øÀÌ Bypass »ç¿ë)
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windows Server 2022.ps1"
 set "PS_ERR=%errorlevel%"
 
-rem ì‹¤í–‰ì •ì±… ë³µì›
+rem ½ÇÇàÁ¤Ã¥ º¹¿ø
 if /i "%OLDPOLICY%"=="Undefined" (
   powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser Undefined -Force"
 ) else (
@@ -26,19 +26,19 @@ if /i "%OLDPOLICY%"=="Undefined" (
 
 echo.
 if %PS_ERR% NEQ 0 (
-  echo [ì˜¤ë¥˜] PowerShell ìŠ¤í¬ë¦½íŠ¸ê°€ ì˜¤ë¥˜ ì½”ë“œ %PS_ERR% ë¡œ ì¢…ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.
+  echo [¿À·ù] PowerShell ½ºÅ©¸³Æ®°¡ ¿À·ù ÄÚµå %PS_ERR% ·Î Á¾·áµÇ¾ú½À´Ï´Ù.
   pause
   exit /b %PS_ERR%
 )
 
-echo [ì•ˆë‚´] ë³´ì•ˆ ì„¤ì • ì ìš©ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤. (ì‹¤í–‰ì •ì±…: %OLDPOLICY% ë¡œ ë³µì›)
-echo ìž¬ë¶€íŒ…ì´ í•„ìš”í•œ í•­ëª©ì´ í¬í•¨ë˜ì–´ ìžˆìŠµë‹ˆë‹¤.
+echo [¾È³»] º¸¾È ¼³Á¤ Àû¿ëÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù. (½ÇÇàÁ¤Ã¥: %OLDPOLICY% ·Î º¹¿ø)
+echo ÀçºÎÆÃÀÌ ÇÊ¿äÇÑ Ç×¸ñÀÌ Æ÷ÇÔµÇ¾î ÀÖ½À´Ï´Ù.
 
-choice /c YN /n /m "ì§€ê¸ˆ ìž¬ë¶€íŒ…í•˜ì‹œê² ìŠµë‹ˆê¹Œ? (Y/N): "
+choice /c YN /n /m "Áö±Ý ÀçºÎÆÃÇÏ½Ã°Ú½À´Ï±î? (Y/N): "
 if errorlevel 2 (
-  echo ìž¬ë¶€íŒ…ì„ ì·¨ì†Œí–ˆìŠµë‹ˆë‹¤.
+  echo ÀçºÎÆÃÀ» Ãë¼ÒÇß½À´Ï´Ù.
   exit /b 0
 )
 
-shutdown /r /t 30 /c "Windows Server 2022 ë³´ì•ˆ ì„¤ì • ì ìš© â€“ 30ì´ˆ í›„ ìžë™ ìž¬ë¶€íŒ…"
+shutdown /r /t 30 /c "Windows Server 2022 º¸¾È ¼³Á¤ Àû¿ë ? 30ÃÊ ÈÄ ÀÚµ¿ ÀçºÎÆÃ"
 exit /b 0
