@@ -1,110 +1,110 @@
-# Windows Server 2019 ë³´ì•ˆ ê°•í™” ìŠ¤í¬ë¦½íŠ¸ (ì‹¤í–‰ ë¡œê·¸ ì¶œë ¥ ë° ì—ëŸ¬ ì²˜ë¦¬ í¬í•¨)
+# Windows Server 2019 º¸¾È °­È­ ½ºÅ©¸³Æ® (½ÇÇà ·Î±× Ãâ·Â ¹× ¿¡·¯ Ã³¸® Æ÷ÇÔ)
 
-# W-01: Administrator ê³„ì • ì´ë¦„ ë³€ê²½
-Write-Host "W-01: Administrator ê³„ì • ì´ë¦„ ë³€ê²½ ì‹œë„" -ForegroundColor Cyan
+# W-01: Administrator °èÁ¤ ÀÌ¸§ º¯°æ
+Write-Host "W-01: Administrator °èÁ¤ ÀÌ¸§ º¯°æ ½Ãµµ" -ForegroundColor Cyan
 try {
     $adminSID = (Get-WmiObject Win32_UserAccount | Where-Object { $_.SID -like "*-500" }).SID
     $admin = Get-LocalUser | Where-Object { $_.SID -eq $adminSID }
     $newName = "iteasy_admin"
     if ($admin.Name -ne $newName) {
         Rename-LocalUser -Name $admin.Name -NewName $newName
-        Write-Host " > Administrator ê³„ì •ëª…ì„ $newName(ìœ¼)ë¡œ ë³€ê²½ ì™„ë£Œ" -ForegroundColor Green
+        Write-Host " > Administrator °èÁ¤¸íÀ» $newName(À¸)·Î º¯°æ ¿Ï·á" -ForegroundColor Green
     } else {
-        Write-Host " > ì´ë¯¸ ë³€ê²½ëœ ìƒíƒœìž„" -ForegroundColor Yellow
+        Write-Host " > ÀÌ¹Ì º¯°æµÈ »óÅÂÀÓ" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] Administrator ê³„ì •ëª… ë³€ê²½ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] Administrator °èÁ¤¸í º¯°æ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-02: Guest ê³„ì • ë¹„í™œì„±í™”
-Write-Host "W-02: Guest ê³„ì • ë¹„í™œì„±í™” ì‹œë„" -ForegroundColor Cyan
+# W-02: Guest °èÁ¤ ºñÈ°¼ºÈ­
+Write-Host "W-02: Guest °èÁ¤ ºñÈ°¼ºÈ­ ½Ãµµ" -ForegroundColor Cyan
 try {
     $guest = Get-LocalUser | Where-Object { $_.SID -like '*-501' }
     if ($guest -and $guest.Enabled) {
         Disable-LocalUser -Name $guest.Name
-        Write-Host " > Guest ê³„ì • ë¹„í™œì„±í™” ì™„ë£Œ" -ForegroundColor Green
+        Write-Host " > Guest °èÁ¤ ºñÈ°¼ºÈ­ ¿Ï·á" -ForegroundColor Green
     } else {
-        Write-Host " > Guest ê³„ì • ì—†ìŒ ë˜ëŠ” ì´ë¯¸ ë¹„í™œì„±í™”" -ForegroundColor Yellow
+        Write-Host " > Guest °èÁ¤ ¾øÀ½ ¶Ç´Â ÀÌ¹Ì ºñÈ°¼ºÈ­" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] Guest ê³„ì • ë¹„í™œì„±í™” ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] Guest °èÁ¤ ºñÈ°¼ºÈ­ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-03: ë¶ˆí•„ìš”í•œ ê³„ì • ì œê±°
-Write-Host "W-03: ë¶ˆí•„ìš”í•œ ê³„ì • ë¹„í™œì„±í™” ì‹œë„" -ForegroundColor Cyan
+# W-03: ºÒÇÊ¿äÇÑ °èÁ¤ Á¦°Å
+Write-Host "W-03: ºÒÇÊ¿äÇÑ °èÁ¤ ºñÈ°¼ºÈ­ ½Ãµµ" -ForegroundColor Cyan
 try {
     $except = @("iteasy_admin", "Guest", "WDAGUtilityAccount", "DefaultAccount")
     $removed = 0
     Get-LocalUser | Where-Object { $except -notcontains $_.Name } | ForEach-Object {
         try {
             Disable-LocalUser -Name $_.Name
-            Write-Host " > $_.Name ê³„ì • ë¹„í™œì„±í™” ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > $_.Name °èÁ¤ ºñÈ°¼ºÈ­ ¿Ï·á" -ForegroundColor Green
             $removed++
         } catch {
-            Write-Host " > $_.Name ê³„ì • ë¹„í™œì„±í™” ì‹¤íŒ¨: $_" -ForegroundColor Red
+            Write-Host " > $_.Name °èÁ¤ ºñÈ°¼ºÈ­ ½ÇÆÐ: $_" -ForegroundColor Red
         }
     }
-    if ($removed -eq 0) { Write-Host " > ë¹„í™œì„±í™” í•  ê³„ì • ì—†ìŒ" -ForegroundColor Yellow }
+    if ($removed -eq 0) { Write-Host " > ºñÈ°¼ºÈ­ ÇÒ °èÁ¤ ¾øÀ½" -ForegroundColor Yellow }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ë¶ˆí•„ìš”í•œ ê³„ì • ë¹„í™œì„±í™” ìž‘ì—… ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ºÒÇÊ¿äÇÑ °èÁ¤ ºñÈ°¼ºÈ­ ÀÛ¾÷ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-04: ê³„ì • ìž ê¸ˆ ìž„ê³„ê°’ ì„¤ì • (5íšŒ ì‹¤íŒ¨ ì‹œ)
-Write-Host "W-04: ê³„ì • ìž ê¸ˆ ìž„ê³„ê°’ ì„¤ì •(5íšŒ)" -ForegroundColor Cyan
+# W-04: °èÁ¤ Àá±Ý ÀÓ°è°ª ¼³Á¤ (5È¸ ½ÇÆÐ ½Ã)
+Write-Host "W-04: °èÁ¤ Àá±Ý ÀÓ°è°ª ¼³Á¤(5È¸)" -ForegroundColor Cyan
 try {
     net accounts /lockoutthreshold:5
-    Write-Host " > ê³„ì • ìž ê¸ˆ ìž„ê³„ê°’(5íšŒ) ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > °èÁ¤ Àá±Ý ÀÓ°è°ª(5È¸) ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê³„ì • ìž ê¸ˆ ìž„ê³„ê°’ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °èÁ¤ Àá±Ý ÀÓ°è°ª ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-05: í•´ë… ê°€ëŠ¥í•œ ì•”í˜¸í™”ë¥¼ ì‚¬ìš©í•˜ì—¬ ì•”í˜¸ ì €ìž¥ í•´ì œ
-Write-Host "W-05: ì•”í˜¸ ì €ìž¥ ì •ì±… ë³€ê²½(í•´ë… ê°€ëŠ¥ ì•”í˜¸ ì €ìž¥ í•´ì œ)" -ForegroundColor Cyan
+# W-05: ÇØµ¶ °¡´ÉÇÑ ¾ÏÈ£È­¸¦ »ç¿ëÇÏ¿© ¾ÏÈ£ ÀúÀå ÇØÁ¦
+Write-Host "W-05: ¾ÏÈ£ ÀúÀå Á¤Ã¥ º¯°æ(ÇØµ¶ °¡´É ¾ÏÈ£ ÀúÀå ÇØÁ¦)" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "ClearTextPassword" -Value 0
-    Write-Host " > ì•”í˜¸ ì €ìž¥ ì •ì±… ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ¾ÏÈ£ ÀúÀå Á¤Ã¥ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì•”í˜¸ ì €ìž¥ ì •ì±… ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¾ÏÈ£ ÀúÀå Á¤Ã¥ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-06: ê´€ë¦¬ìž ê·¸ë£¹ì—ì„œ ë¶ˆí•„ìš”í•œ ê³„ì • ì œê±°
-Write-Host "W-06: ê´€ë¦¬ìž ê·¸ë£¹ì—ì„œ ë¶ˆí•„ìš”í•œ ê³„ì • ì œê±° ì‹œë„" -ForegroundColor Cyan
+# W-06: °ü¸®ÀÚ ±×·ì¿¡¼­ ºÒÇÊ¿äÇÑ °èÁ¤ Á¦°Å
+Write-Host "W-06: °ü¸®ÀÚ ±×·ì¿¡¼­ ºÒÇÊ¿äÇÑ °èÁ¤ Á¦°Å ½Ãµµ" -ForegroundColor Cyan
 try {
     $except = @("iteasy_admin", "SYSTEM")
     Get-LocalGroupMember -Group "Administrators" | Where-Object { $except -notcontains $_.Name } | ForEach-Object {
         try {
             Remove-LocalGroupMember -Group "Administrators" -Member $_.Name
-            Write-Host " > ê´€ë¦¬ìž ê·¸ë£¹ì—ì„œ $_.Name ì œê±° ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > °ü¸®ÀÚ ±×·ì¿¡¼­ $_.Name Á¦°Å ¿Ï·á" -ForegroundColor Green
         } catch {
-            Write-Host " > ê´€ë¦¬ìž ê·¸ë£¹ì—ì„œ $_.Name ì œê±° ì‹¤íŒ¨: $_" -ForegroundColor Red
+            Write-Host " > °ü¸®ÀÚ ±×·ì¿¡¼­ $_.Name Á¦°Å ½ÇÆÐ: $_" -ForegroundColor Red
         }
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê´€ë¦¬ìž ê·¸ë£¹ ê´€ë¦¬ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °ü¸®ÀÚ ±×·ì °ü¸® ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-07: ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™”(ë ˆì§€ìŠ¤íŠ¸ë¦¬)
-Write-Host "W-07: ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™”(ë ˆì§€ìŠ¤íŠ¸ë¦¬)" -ForegroundColor Cyan
+# W-07: ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­(·¹Áö½ºÆ®¸®)
+Write-Host "W-07: ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­(·¹Áö½ºÆ®¸®)" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareServer" -Value 0
-    Write-Host " > ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™” ì„¤ì • ì™„ë£Œ (ìž¬ë¶€íŒ… í•„ìš”)" -ForegroundColor Green
+    Write-Host " > ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­ ¼³Á¤ ¿Ï·á (ÀçºÎÆÃ ÇÊ¿ä)" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™” ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-08: í•˜ë“œë””ìŠ¤í¬ ê¸°ë³¸ ê³µìœ (C$, D$ ë“±) ì œê±° (ë ˆì§€ìŠ¤íŠ¸ë¦¬)
-Write-Host "W-08: í•˜ë“œë””ìŠ¤í¬ ê¸°ë³¸ ê³µìœ (C$, D$ ë“±) ì œê±°(ë ˆì§€ìŠ¤íŠ¸ë¦¬ ë°©ì‹)" -ForegroundColor Cyan
+# W-08: ÇÏµåµð½ºÅ© ±âº» °øÀ¯(C$, D$ µî) Á¦°Å (·¹Áö½ºÆ®¸®)
+Write-Host "W-08: ÇÏµåµð½ºÅ© ±âº» °øÀ¯(C$, D$ µî) Á¦°Å(·¹Áö½ºÆ®¸® ¹æ½Ä)" -ForegroundColor Cyan
 try {
     $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters"
-    # AutoShareServer ê°’ì„ 0ìœ¼ë¡œ ì„¤ì •
+    # AutoShareServer °ªÀ» 0À¸·Î ¼³Á¤
     Set-ItemProperty -Path $regPath -Name "AutoShareServer" -Value 0
-    Write-Host " > ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™”(ë ˆì§€ìŠ¤íŠ¸ë¦¬) ì„¤ì • ì™„ë£Œ (ìž¬ë¶€íŒ… í•„ìš”)" -ForegroundColor Green
+    Write-Host " > ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­(·¹Áö½ºÆ®¸®) ¼³Á¤ ¿Ï·á (ÀçºÎÆÃ ÇÊ¿ä)" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê¸°ë³¸ ê³µìœ  ìžë™ ìƒì„± ë¹„í™œì„±í™”(ë ˆì§€ìŠ¤íŠ¸ë¦¬) ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ±âº» °øÀ¯ ÀÚµ¿ »ý¼º ºñÈ°¼ºÈ­(·¹Áö½ºÆ®¸®) ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-09: ë¶ˆí•„ìš”í•œ ì„œë¹„ìŠ¤ ì¼ê´„ ë¹„í™œì„±í™”
-Write-Host "W-09: ë¶ˆí•„ìš” ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” ì‹œë„" -ForegroundColor Cyan
+# W-09: ºÒÇÊ¿äÇÑ ¼­ºñ½º ÀÏ°ý ºñÈ°¼ºÈ­
+Write-Host "W-09: ºÒÇÊ¿ä ¼­ºñ½º ºñÈ°¼ºÈ­ ½Ãµµ" -ForegroundColor Cyan
 $serviceList = @(
     "Alerter",
     "ClipSrv",
@@ -119,206 +119,206 @@ foreach ($svc in $serviceList) {
         if ($service) {
             Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
             Set-Service -Name $svc -StartupType Disabled -ErrorAction SilentlyContinue
-            Write-Host " > $svc ì„œë¹„ìŠ¤ ì¤‘ì§€ ë° ë¹„í™œì„±í™” ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > $svc ¼­ºñ½º ÁßÁö ¹× ºñÈ°¼ºÈ­ ¿Ï·á" -ForegroundColor Green
         }
     } catch {
-        Write-Host " > [ì˜¤ë¥˜] $svc ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” ì‹¤íŒ¨: $_" -ForegroundColor Red
+        Write-Host " > [¿À·ù] $svc ¼­ºñ½º ºñÈ°¼ºÈ­ ½ÇÆÐ: $_" -ForegroundColor Red
     }
 }
 
-# W-24: NetBIOS ë°”ì¸ë”© ì„œë¹„ìŠ¤ êµ¬ë™ ì ê²€
-Write-Host "W-24: NetBIOS ë°”ì¸ë”© í•´ì œ" -ForegroundColor Cyan
+# W-24: NetBIOS ¹ÙÀÎµù ¼­ºñ½º ±¸µ¿ Á¡°Ë
+Write-Host "W-24: NetBIOS ¹ÙÀÎµù ÇØÁ¦" -ForegroundColor Cyan
 try {
     Get-WmiObject -Class Win32_NetworkAdapterConfiguration | Where-Object { $_.IPEnabled } | ForEach-Object {
         try {
             $_.SetTcpipNetbios(2) | Out-Null
-            Write-Host " > NIC $($_.Description) NetBIOS í•´ì œ ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > NIC $($_.Description) NetBIOS ÇØÁ¦ ¿Ï·á" -ForegroundColor Green
         } catch {
-            Write-Host " > NIC $($_.Description) NetBIOS í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+            Write-Host " > NIC $($_.Description) NetBIOS ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
         }
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] NetBIOS ë°”ì¸ë”© í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] NetBIOS ¹ÙÀÎµù ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-35: ì›ê²©ìœ¼ë¡œ ì•¡ì„¸ìŠ¤ í•  ìˆ˜ ìžˆëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ ê²½ë¡œ ì„œë¹„ìŠ¤ ì¤‘ì§€
-Write-Host "W-35: RemoteRegistry ì„œë¹„ìŠ¤ ë¹„í™œì„±í™”" -ForegroundColor Cyan
+# W-35: ¿ø°ÝÀ¸·Î ¾×¼¼½º ÇÒ ¼ö ÀÖ´Â ·¹Áö½ºÆ®¸® °æ·Î ¼­ºñ½º ÁßÁö
+Write-Host "W-35: RemoteRegistry ¼­ºñ½º ºñÈ°¼ºÈ­" -ForegroundColor Cyan
 try {
     Stop-Service -Name RemoteRegistry -Force -ErrorAction SilentlyContinue
     Set-Service -Name RemoteRegistry -StartupType Disabled
-    Write-Host " > RemoteRegistry ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > RemoteRegistry ¼­ºñ½º ºñÈ°¼ºÈ­ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] RemoteRegistry ë¹„í™œì„±í™” ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] RemoteRegistry ºñÈ°¼ºÈ­ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-38: í™”ë©´ë³´í˜¸ê¸° ì„¤ì •
-Write-Host "W-38: í™”ë©´ë³´í˜¸ê¸° ì •ì±… ì„¤ì •" -ForegroundColor Cyan
+# W-38: È­¸éº¸È£±â ¼³Á¤
+Write-Host "W-38: È­¸éº¸È£±â Á¤Ã¥ ¼³Á¤" -ForegroundColor Cyan
 $regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop"
 try {
     New-Item -Path $regPath -Force | Out-Null
     Set-ItemProperty -Path $regPath -Name "ScreenSaveActive" -Value "1"
     Set-ItemProperty -Path $regPath -Name "ScreenSaverIsSecure" -Value "1"
     Set-ItemProperty -Path $regPath -Name "ScreenSaveTimeOut" -Value "600"
-    Write-Host " > í™”ë©´ë³´í˜¸ê¸° ì •ì±… ì ìš© ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > È­¸éº¸È£±â Á¤Ã¥ Àû¿ë ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] í™”ë©´ë³´í˜¸ê¸° ì •ì±… ì ìš© ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] È­¸éº¸È£±â Á¤Ã¥ Àû¿ë ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-39: ë¡œê·¸ì˜¨ í•˜ì§€ ì•Šê³  ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš©
-Write-Host "W-39: ë¡œê·¸ì˜¨ ì—†ì´ ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš© í•´ì œ" -ForegroundColor Cyan
+# W-39: ·Î±×¿Â ÇÏÁö ¾Ê°í ½Ã½ºÅÛ Á¾·á Çã¿ë
+Write-Host "W-39: ·Î±×¿Â ¾øÀÌ ½Ã½ºÅÛ Á¾·á Çã¿ë ÇØÁ¦" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ShutdownWithoutLogon" -Value 0
-    Write-Host " > ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš© í•´ì œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ½Ã½ºÅÛ Á¾·á Çã¿ë ÇØÁ¦ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš© í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ½Ã½ºÅÛ Á¾·á Çã¿ë ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-40: ì›ê²© ì‹œìŠ¤í…œì—ì„œ ê°•ì œë¡œ ì‹œìŠ¤í…œ ì¢…ë£Œ
-Write-Host "W-40: ì›ê²© ì‹œìŠ¤í…œ ê°•ì œ ì¢…ë£Œ ê¶Œí•œ ê´€ë¦¬ìžë§Œ ë¶€ì—¬" -ForegroundColor Cyan
+# W-40: ¿ø°Ý ½Ã½ºÅÛ¿¡¼­ °­Á¦·Î ½Ã½ºÅÛ Á¾·á
+Write-Host "W-40: ¿ø°Ý ½Ã½ºÅÛ °­Á¦ Á¾·á ±ÇÇÑ °ü¸®ÀÚ¸¸ ºÎ¿©" -ForegroundColor Cyan
 try {
     $cfg = "$env:TEMP\secpol.cfg"
     secedit /export /cfg $cfg
     (Get-Content $cfg) -replace 'SeRemoteShutdownPrivilege\s*=.*', 'SeRemoteShutdownPrivilege = *S-1-5-32-544' | Set-Content $cfg
     secedit /configure /db secedit.sdb /cfg $cfg /areas USER_RIGHTS
     Remove-Item $cfg
-    Write-Host " > ì›ê²© ì‹œìŠ¤í…œ ì¢…ë£Œ ê¶Œí•œ ì œí•œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ¿ø°Ý ½Ã½ºÅÛ Á¾·á ±ÇÇÑ Á¦ÇÑ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì›ê²© ì‹œìŠ¤í…œ ì¢…ë£Œ ê¶Œí•œ ì œí•œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¿ø°Ý ½Ã½ºÅÛ Á¾·á ±ÇÇÑ Á¦ÇÑ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-41. ë³´ì•ˆ ê°ì‚¬ë¥¼ ë¡œê·¸í•  ìˆ˜ ì—†ëŠ” ê²½ìš° ì¦‰ì‹œ ì‹œìŠ¤í…œ ì¢…ë£Œ
-Write-Host "W-41: ê°ì‚¬ ë¶ˆê°€ì‹œ ì‹œìŠ¤í…œ ì¢…ë£Œ ì„¤ì •" -ForegroundColor Cyan
+# W-41. º¸¾È °¨»ç¸¦ ·Î±×ÇÒ ¼ö ¾ø´Â °æ¿ì Áï½Ã ½Ã½ºÅÛ Á¾·á
+Write-Host "W-41: °¨»ç ºÒ°¡½Ã ½Ã½ºÅÛ Á¾·á ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "CrashOnAuditFail" -Value 0
-    Write-Host " > ê°ì‚¬ ë¶ˆê°€ì‹œ ì‹œìŠ¤í…œ ì¢…ë£Œ í•´ì œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > °¨»ç ºÒ°¡½Ã ½Ã½ºÅÛ Á¾·á ÇØÁ¦ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê°ì‚¬ ë¶ˆê°€ì‹œ ì‹œìŠ¤í…œ ì¢…ë£Œ í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °¨»ç ºÒ°¡½Ã ½Ã½ºÅÛ Á¾·á ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-42. SAM ê³„ì •ê³¼ ê³µìœ ì˜ ìµëª… ì—´ê±° í—ˆìš© ì•ˆ í•¨
-Write-Host "W-42: SAM ê³„ì • ë° ê³µìœ  ìµëª… ì—´ê±° ì œí•œ" -ForegroundColor Cyan
+# W-42. SAM °èÁ¤°ú °øÀ¯ÀÇ ÀÍ¸í ¿­°Å Çã¿ë ¾È ÇÔ
+Write-Host "W-42: SAM °èÁ¤ ¹× °øÀ¯ ÀÍ¸í ¿­°Å Á¦ÇÑ" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RestrictAnonymous" -Value 1
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RestrictAnonymousSAM" -Value 1
-    Write-Host " > ìµëª… ì—´ê±° ì œí•œ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÀÍ¸í ¿­°Å Á¦ÇÑ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ìµëª… ì—´ê±° ì œí•œ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÀÍ¸í ¿­°Å Á¦ÇÑ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-43. Autologon ê¸°ëŠ¥ ì œì–´
-Write-Host "W-43: ìžë™ ë¡œê·¸ì˜¨ ê¸°ëŠ¥ í•´ì œ" -ForegroundColor Cyan
+# W-43. Autologon ±â´É Á¦¾î
+Write-Host "W-43: ÀÚµ¿ ·Î±×¿Â ±â´É ÇØÁ¦" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name "AutoAdminLogon" -Value "0"
-    Write-Host " > ìžë™ ë¡œê·¸ì˜¨ í•´ì œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÀÚµ¿ ·Î±×¿Â ÇØÁ¦ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ìžë™ ë¡œê·¸ì˜¨ í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÀÚµ¿ ·Î±×¿Â ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-44. ì´ë™ì‹ ë¯¸ë””ì–´ í¬ë§· ë° êº¼ë‚´ê¸° í—ˆìš© ì œì–´
-Write-Host "W-44: ì´ë™ì‹ ë¯¸ë””ì–´ í¬ë§·/êº¼ë‚´ê¸° ê¶Œí•œ ê´€ë¦¬ìž ì œí•œ" -ForegroundColor Cyan
+# W-44. ÀÌµ¿½Ä ¹Ìµð¾î Æ÷¸Ë ¹× ²¨³»±â Çã¿ë Á¦¾î
+Write-Host "W-44: ÀÌµ¿½Ä ¹Ìµð¾î Æ÷¸Ë/²¨³»±â ±ÇÇÑ °ü¸®ÀÚ Á¦ÇÑ" -ForegroundColor Cyan
 try {
     $cfg = "$env:TEMP\secpol.cfg"
     secedit /export /cfg $cfg
     (Get-Content $cfg) -replace 'AllocateDASD\s*=.*', 'AllocateDASD = *S-1-5-32-544' | Set-Content $cfg
     secedit /configure /db secedit.sdb /cfg $cfg /areas USER_RIGHTS
     Remove-Item $cfg
-    Write-Host " > ì´ë™ì‹ ë¯¸ë””ì–´ í¬ë§·/êº¼ë‚´ê¸° ê¶Œí•œ ì œí•œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÀÌµ¿½Ä ¹Ìµð¾î Æ÷¸Ë/²¨³»±â ±ÇÇÑ Á¦ÇÑ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì´ë™ì‹ ë¯¸ë””ì–´ í¬ë§·/êº¼ë‚´ê¸° ê¶Œí•œ ì œí•œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÀÌµ¿½Ä ¹Ìµð¾î Æ÷¸Ë/²¨³»±â ±ÇÇÑ Á¦ÇÑ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-46: Everyone ì‚¬ìš© ê¶Œí•œì„ ìµëª… ì‚¬ìš©ìžì— ì ìš© í•´ì œ
-Write-Host "W-46: Everyone ê¶Œí•œì— ìµëª… ì‚¬ìš©ìž ì œì™¸" -ForegroundColor Cyan
+# W-46: Everyone »ç¿ë ±ÇÇÑÀ» ÀÍ¸í »ç¿ëÀÚ¿¡ Àû¿ë ÇØÁ¦
+Write-Host "W-46: Everyone ±ÇÇÑ¿¡ ÀÍ¸í »ç¿ëÀÚ Á¦¿Ü" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "EveryoneIncludesAnonymous" -Value 0
-    Write-Host " > Everyoneì— ìµëª… ì‚¬ìš©ìž ì œì™¸ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > Everyone¿¡ ÀÍ¸í »ç¿ëÀÚ Á¦¿Ü ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] Everyoneì— ìµëª… ì‚¬ìš©ìž ì œì™¸ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] Everyone¿¡ ÀÍ¸í »ç¿ëÀÚ Á¦¿Ü ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-47: ê³„ì • ìž ê¸ˆ ê¸°ê°„ ì„¤ì •
-Write-Host "W-47: ê³„ì • ìž ê¸ˆ ê¸°ê°„/ìœˆë„ìš° ì„¤ì •" -ForegroundColor Cyan
+# W-47: °èÁ¤ Àá±Ý ±â°£ ¼³Á¤
+Write-Host "W-47: °èÁ¤ Àá±Ý ±â°£/À©µµ¿ì ¼³Á¤" -ForegroundColor Cyan
 try {
     net accounts /lockoutduration:60 /lockoutwindow:60
-    Write-Host " > ê³„ì • ìž ê¸ˆ ê¸°ê°„ ë° ìœˆë„ìš° ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > °èÁ¤ Àá±Ý ±â°£ ¹× À©µµ¿ì ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê³„ì • ìž ê¸ˆ ê¸°ê°„ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °èÁ¤ Àá±Ý ±â°£ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-48: íŒ¨ìŠ¤ì›Œë“œ ë³µìž¡ì„± ì„¤ì •
-Write-Host "W-48: íŒ¨ìŠ¤ì›Œë“œ ë³µìž¡ì„± ì •ì±… ì„¤ì •" -ForegroundColor Cyan
+# W-48: ÆÐ½º¿öµå º¹Àâ¼º ¼³Á¤
+Write-Host "W-48: ÆÐ½º¿öµå º¹Àâ¼º Á¤Ã¥ ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "PasswordComplexity" -Value 1
-    Write-Host " > íŒ¨ìŠ¤ì›Œë“œ ë³µìž¡ì„± ì •ì±… ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÆÐ½º¿öµå º¹Àâ¼º Á¤Ã¥ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] íŒ¨ìŠ¤ì›Œë“œ ë³µìž¡ì„± ì •ì±… ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÆÐ½º¿öµå º¹Àâ¼º Á¤Ã¥ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-49: íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ì•”í˜¸ ê¸¸ì´
-Write-Host "W-49: íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ê¸¸ì´ ì„¤ì •" -ForegroundColor Cyan
+# W-49: ÆÐ½º¿öµå ÃÖ¼Ò ¾ÏÈ£ ±æÀÌ
+Write-Host "W-49: ÆÐ½º¿öµå ÃÖ¼Ò ±æÀÌ ¼³Á¤" -ForegroundColor Cyan
 try {
     net accounts /minpwlen:8
-    Write-Host " > íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ê¸¸ì´ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÆÐ½º¿öµå ÃÖ¼Ò ±æÀÌ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ê¸¸ì´ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÆÐ½º¿öµå ÃÖ¼Ò ±æÀÌ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-50: íŒ¨ìŠ¤ì›Œë“œ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„
-Write-Host "W-50: íŒ¨ìŠ¤ì›Œë“œ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„ ì„¤ì •" -ForegroundColor Cyan
+# W-50: ÆÐ½º¿öµå ÃÖ´ë »ç¿ë ±â°£
+Write-Host "W-50: ÆÐ½º¿öµå ÃÖ´ë »ç¿ë ±â°£ ¼³Á¤" -ForegroundColor Cyan
 try {
     net accounts /maxpwage:90
-    Write-Host " > íŒ¨ìŠ¤ì›Œë“œ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÆÐ½º¿öµå ÃÖ´ë »ç¿ë ±â°£ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] íŒ¨ìŠ¤ì›Œë“œ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÆÐ½º¿öµå ÃÖ´ë »ç¿ë ±â°£ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-51: íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ì‚¬ìš© ê¸°ê°„
-Write-Host "W-51: íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ì‚¬ìš© ê¸°ê°„ ì„¤ì •" -ForegroundColor Cyan
+# W-51: ÆÐ½º¿öµå ÃÖ¼Ò »ç¿ë ±â°£
+Write-Host "W-51: ÆÐ½º¿öµå ÃÖ¼Ò »ç¿ë ±â°£ ¼³Á¤" -ForegroundColor Cyan
 try {
     net accounts /minpwage:1
-    Write-Host " > íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÆÐ½º¿öµå ÃÖ¼Ò »ç¿ë ±â°£ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] íŒ¨ìŠ¤ì›Œë“œ ìµœì†Œ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÆÐ½º¿öµå ÃÖ¼Ò »ç¿ë ±â°£ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-52: ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ í‘œì‹œ ì•ˆí•¨
-Write-Host "W-52: ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ë¯¸í‘œì‹œ ì„¤ì •" -ForegroundColor Cyan
+# W-52: ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ Ç¥½Ã ¾ÈÇÔ
+Write-Host "W-52: ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¹ÌÇ¥½Ã ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "DontDisplayLastUserName" -Value 1
-    Write-Host " > ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ë¯¸í‘œì‹œ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¹ÌÇ¥½Ã ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ë¯¸í‘œì‹œ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¹ÌÇ¥½Ã ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-54: ìµëª… SID/ì´ë¦„ ë³€í™˜ í—ˆìš© í•´ì œ
-Write-Host "W-54: ìµëª… SID/ì´ë¦„ ë³€í™˜ í—ˆìš© í•´ì œ" -ForegroundColor Cyan
+# W-54: ÀÍ¸í SID/ÀÌ¸§ º¯È¯ Çã¿ë ÇØÁ¦
+Write-Host "W-54: ÀÍ¸í SID/ÀÌ¸§ º¯È¯ Çã¿ë ÇØÁ¦" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LSAAnonymousNameLookup" -Value 0
-    Write-Host " > ìµëª… SID/ì´ë¦„ ë³€í™˜ í—ˆìš© í•´ì œ ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÀÍ¸í SID/ÀÌ¸§ º¯È¯ Çã¿ë ÇØÁ¦ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ìµëª… SID/ì´ë¦„ ë³€í™˜ í•´ì œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÀÍ¸í SID/ÀÌ¸§ º¯È¯ ÇØÁ¦ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-55: ìµœê·¼ ì•”í˜¸ ê¸°ì–µ
-Write-Host "W-55: ìµœê·¼ ì•”í˜¸ ê¸°ì–µ ì„¤ì •" -ForegroundColor Cyan
+# W-55: ÃÖ±Ù ¾ÏÈ£ ±â¾ï
+Write-Host "W-55: ÃÖ±Ù ¾ÏÈ£ ±â¾ï ¼³Á¤" -ForegroundColor Cyan
 try {
     net accounts /uniquepw:12
-    Write-Host " > ìµœê·¼ ì•”í˜¸ ê¸°ì–µ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÃÖ±Ù ¾ÏÈ£ ±â¾ï ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ìµœê·¼ ì•”í˜¸ ê¸°ì–µ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÃÖ±Ù ¾ÏÈ£ ±â¾ï ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-56: ì½˜ì†” ë¡œê·¸ì˜¨ ì‹œ ë¡œì»¬ ê³„ì •ì—ì„œ ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ
-Write-Host "W-56: ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ" -ForegroundColor Cyan
+# W-56: ÄÜ¼Ö ·Î±×¿Â ½Ã ·ÎÄÃ °èÁ¤¿¡¼­ ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ
+Write-Host "W-56: ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LimitBlankPasswordUse" -Value 1
-    Write-Host " > ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-57: ì›ê²©í„°ë¯¸ë„ ì ‘ì† ê°€ëŠ¥í•œ ì‚¬ìš©ìž ê·¸ë£¹ ì œí•œ
-Write-Host "W-57: ì›ê²©í„°ë¯¸ë„ ì ‘ì† ì‚¬ìš©ìž ê·¸ë£¹ ì œí•œ" -ForegroundColor Cyan
+# W-57: ¿ø°ÝÅÍ¹Ì³Î Á¢¼Ó °¡´ÉÇÑ »ç¿ëÀÚ ±×·ì Á¦ÇÑ
+Write-Host "W-57: ¿ø°ÝÅÍ¹Ì³Î Á¢¼Ó »ç¿ëÀÚ ±×·ì Á¦ÇÑ" -ForegroundColor Cyan
 try {
     $groups = @("Administrators", "Remote Desktop Users")
     foreach ($group in $groups) {
@@ -327,169 +327,169 @@ try {
         } | ForEach-Object {
             try {
                 Remove-LocalGroupMember -Group $group -Member $_.Name -ErrorAction SilentlyContinue
-                Write-Host " > $group ê·¸ë£¹ì—ì„œ $_.Name ì œê±° ì™„ë£Œ" -ForegroundColor Green
+                Write-Host " > $group ±×·ì¿¡¼­ $_.Name Á¦°Å ¿Ï·á" -ForegroundColor Green
             } catch {
-                Write-Host " > $group ê·¸ë£¹ì—ì„œ $_.Name ì œê±° ì‹¤íŒ¨: $_" -ForegroundColor Red
+                Write-Host " > $group ±×·ì¿¡¼­ $_.Name Á¦°Å ½ÇÆÐ: $_" -ForegroundColor Red
             }
         }
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì›ê²©í„°ë¯¸ë„ ì‚¬ìš©ìž ê·¸ë£¹ ì œí•œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¿ø°ÝÅÍ¹Ì³Î »ç¿ëÀÚ ±×·ì Á¦ÇÑ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-58. í„°ë¯¸ë„ ì„œë¹„ìŠ¤ ì•”í˜¸í™” ìˆ˜ì¤€ ì„¤ì •
-Write-Host "W-58: í„°ë¯¸ë„ ì„œë¹„ìŠ¤ ì•”í˜¸í™” ìˆ˜ì¤€(ìµœìƒ) ì„¤ì •" -ForegroundColor Cyan
+# W-58. ÅÍ¹Ì³Î ¼­ºñ½º ¾ÏÈ£È­ ¼öÁØ ¼³Á¤
+Write-Host "W-58: ÅÍ¹Ì³Î ¼­ºñ½º ¾ÏÈ£È­ ¼öÁØ(ÃÖ»ó) ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "MinEncryptionLevel" -Value 3
-    Write-Host " > í„°ë¯¸ë„ ì„œë¹„ìŠ¤ ì•”í˜¸í™” ìˆ˜ì¤€(ìµœìƒ) ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÅÍ¹Ì³Î ¼­ºñ½º ¾ÏÈ£È­ ¼öÁØ(ÃÖ»ó) ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] í„°ë¯¸ë„ ì„œë¹„ìŠ¤ ì•”í˜¸í™” ìˆ˜ì¤€ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÅÍ¹Ì³Î ¼­ºñ½º ¾ÏÈ£È­ ¼öÁØ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-60/63/65: SNMP, DNS, Telnet ì„œë¹„ìŠ¤ êµ¬ë™ ì ê²€(ì¡´ìž¬ì‹œë§Œ ì²˜ë¦¬)
-Write-Host "W-60/63/65: SNMP, DNS, Telnet ì„œë¹„ìŠ¤ ë¹„í™œì„±í™”" -ForegroundColor Cyan
+# W-60/63/65: SNMP, DNS, Telnet ¼­ºñ½º ±¸µ¿ Á¡°Ë(Á¸Àç½Ã¸¸ Ã³¸®)
+Write-Host "W-60/63/65: SNMP, DNS, Telnet ¼­ºñ½º ºñÈ°¼ºÈ­" -ForegroundColor Cyan
 foreach ($svc in @("SNMP", "DNS", "Telnet")) {
     try {
         $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
         if ($s) {
             Stop-Service -Name $svc -Force
             Set-Service -Name $svc -StartupType Disabled
-            Write-Host " > $svc ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > $svc ¼­ºñ½º ºñÈ°¼ºÈ­ ¿Ï·á" -ForegroundColor Green
         }
     } catch {
-        Write-Host " > [ì˜¤ë¥˜] $svc ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” ì‹¤íŒ¨: $_" -ForegroundColor Red
+        Write-Host " > [¿À·ù] $svc ¼­ºñ½º ºñÈ°¼ºÈ­ ½ÇÆÐ: $_" -ForegroundColor Red
     }
 }
 
-# W-67: ì›ê²©í„°ë¯¸ë„ ì ‘ì† íƒ€ìž„ì•„ì›ƒ ì„¤ì • (10ë¶„)
-Write-Host "W-67: ì›ê²©í„°ë¯¸ë„ íƒ€ìž„ì•„ì›ƒ(10ë¶„) ì„¤ì •" -ForegroundColor Cyan
+# W-67: ¿ø°ÝÅÍ¹Ì³Î Á¢¼Ó Å¸ÀÓ¾Æ¿ô ¼³Á¤ (10ºÐ)
+Write-Host "W-67: ¿ø°ÝÅÍ¹Ì³Î Å¸ÀÓ¾Æ¿ô(10ºÐ) ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "MaxIdleTime" -Value 600000
-    Write-Host " > ì›ê²©í„°ë¯¸ë„ íƒ€ìž„ì•„ì›ƒ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ¿ø°ÝÅÍ¹Ì³Î Å¸ÀÓ¾Æ¿ô ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì›ê²©í„°ë¯¸ë„ íƒ€ìž„ì•„ì›ƒ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¿ø°ÝÅÍ¹Ì³Î Å¸ÀÓ¾Æ¿ô ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-69: ì •ì±…ì— ë”°ë¥¸ ì‹œìŠ¤í…œ ë¡œê¹…ì„¤ì •
-Write-Host "W-69: ê°ì‚¬ ì •ì±…(ë¡œê¹…) ì„¤ì •" -ForegroundColor Cyan
+# W-69: Á¤Ã¥¿¡ µû¸¥ ½Ã½ºÅÛ ·Î±ë¼³Á¤
+Write-Host "W-69: °¨»ç Á¤Ã¥(·Î±ë) ¼³Á¤" -ForegroundColor Cyan
 try {
     auditpol /set /subcategory:"User Account Management" /failure:enable
     auditpol /set /subcategory:"Logon" /success:enable /failure:enable
     auditpol /set /subcategory:"Sensitive Privilege Use" /failure:enable
     auditpol /set /subcategory:"Directory Service Access" /failure:enable
     auditpol /set /subcategory:"Audit Policy Change" /success:enable /failure:enable
-    Write-Host " > ê°ì‚¬ ì •ì±…(ë¡œê¹…) ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > °¨»ç Á¤Ã¥(·Î±ë) ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê°ì‚¬ ì •ì±… ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °¨»ç Á¤Ã¥ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-71: ì›ê²©ì—ì„œ ì´ë²¤íŠ¸ ë¡œê·¸íŒŒì¼ ì ‘ê·¼ ì°¨ë‹¨
-Write-Host "W-71: ì›ê²© ì´ë²¤íŠ¸ ë¡œê·¸íŒŒì¼ ì ‘ê·¼ ê¶Œí•œ ì œí•œ" -ForegroundColor Cyan
+# W-71: ¿ø°Ý¿¡¼­ ÀÌº¥Æ® ·Î±×ÆÄÀÏ Á¢±Ù Â÷´Ü
+Write-Host "W-71: ¿ø°Ý ÀÌº¥Æ® ·Î±×ÆÄÀÏ Á¢±Ù ±ÇÇÑ Á¦ÇÑ" -ForegroundColor Cyan
 $paths = @("$env:SystemRoot\System32\config", "$env:SystemRoot\System32\logfiles")
 foreach ($path in $paths) {
     try {
         icacls $path /remove:g "Everyone" /T > $null 2>&1
-        Write-Host " > $path ê¶Œí•œ ì œí•œ ì™„ë£Œ" -ForegroundColor Green
+        Write-Host " > $path ±ÇÇÑ Á¦ÇÑ ¿Ï·á" -ForegroundColor Green
     } catch {
-        Write-Host " > [ì˜¤ë¥˜] $path ê¶Œí•œ ì œí•œ ì‹¤íŒ¨: $_" -ForegroundColor Red
+        Write-Host " > [¿À·ù] $path ±ÇÇÑ Á¦ÇÑ ½ÇÆÐ: $_" -ForegroundColor Red
     }
 }
 
-# W-73: ì‚¬ìš©ìžê°€ í”„ë¦°í„° ë“œë¼ì´ë²„ë¥¼ ì„¤ì¹˜í•  ìˆ˜ ì—†ê²Œ í•¨
-Write-Host "W-73: ì‚¬ìš©ìž í”„ë¦°í„° ë“œë¼ì´ë²„ ì„¤ì¹˜ ê¸ˆì§€" -ForegroundColor Cyan
+# W-73: »ç¿ëÀÚ°¡ ÇÁ¸°ÅÍ µå¶óÀÌ¹ö¸¦ ¼³Ä¡ÇÒ ¼ö ¾ø°Ô ÇÔ
+Write-Host "W-73: »ç¿ëÀÚ ÇÁ¸°ÅÍ µå¶óÀÌ¹ö ¼³Ä¡ ±ÝÁö" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers" -Name "AddPrinterDrivers" -Value 0
-    Write-Host " > ì‚¬ìš©ìž í”„ë¦°í„° ë“œë¼ì´ë²„ ì„¤ì¹˜ ê¸ˆì§€ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > »ç¿ëÀÚ ÇÁ¸°ÅÍ µå¶óÀÌ¹ö ¼³Ä¡ ±ÝÁö ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì‚¬ìš©ìž í”„ë¦°í„° ë“œë¼ì´ë²„ ì„¤ì¹˜ ê¸ˆì§€ ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] »ç¿ëÀÚ ÇÁ¸°ÅÍ µå¶óÀÌ¹ö ¼³Ä¡ ±ÝÁö ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-74: ì„¸ì…˜ ì—°ê²°ì„ ì¤‘ë‹¨í•˜ê¸° ì „ì— í•„ìš”í•œ ìœ íœ´ì‹œê°„
-Write-Host "W-74: ì„¸ì…˜ ìœ íœ´ì‹œê°„(15ë¶„) í›„ ìžë™ ì¢…ë£Œ ì„¤ì •" -ForegroundColor Cyan
+# W-74: ¼¼¼Ç ¿¬°áÀ» Áß´ÜÇÏ±â Àü¿¡ ÇÊ¿äÇÑ À¯ÈÞ½Ã°£
+Write-Host "W-74: ¼¼¼Ç À¯ÈÞ½Ã°£(15ºÐ) ÈÄ ÀÚµ¿ Á¾·á ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanManServer\Parameters" -Name "EnableForcedLogoff" -Value 1
     Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanManServer\Parameters" -Name "AutoDisconnect" -Value 15
-    Write-Host " > ì„¸ì…˜ ìœ íœ´ì‹œê°„(15ë¶„) í›„ ìžë™ ì¢…ë£Œ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ¼¼¼Ç À¯ÈÞ½Ã°£(15ºÐ) ÈÄ ÀÚµ¿ Á¾·á ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì„¸ì…˜ ìœ íœ´ì‹œê°„ ìžë™ ì¢…ë£Œ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ¼¼¼Ç À¯ÈÞ½Ã°£ ÀÚµ¿ Á¾·á ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-75: ê²½ê³  ë©”ì‹œì§€ ì„¤ì •
-Write-Host "W-75: ê²½ê³  ë©”ì‹œì§€(ë°°ë„ˆ) ì„¤ì •" -ForegroundColor Cyan
+# W-75: °æ°í ¸Þ½ÃÁö ¼³Á¤
+Write-Host "W-75: °æ°í ¸Þ½ÃÁö(¹è³Ê) ¼³Á¤" -ForegroundColor Cyan
 try {
-    $caption = "ê²½ê³ : ë¬´ë‹¨ ì ‘ì† ê¸ˆì§€"
+    $caption = "°æ°í: ¹«´Ü Á¢¼Ó ±ÝÁö"
     $text = @"
-ì´ ì‹œìŠ¤í…œì€ í—ˆê°€ë°›ì€ ì‚¬ìš©ìžë§Œ ì ‘ì†í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
-ë¬´ë‹¨ ì ‘ì† ì‹œ ë²•ì  ì²˜ë²Œì„ ë°›ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ÀÌ ½Ã½ºÅÛÀº Çã°¡¹ÞÀº »ç¿ëÀÚ¸¸ Á¢¼ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.
+¹«´Ü Á¢¼Ó ½Ã ¹ýÀû Ã³¹úÀ» ¹ÞÀ» ¼ö ÀÖ½À´Ï´Ù.
 "@
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "legalnoticecaption" -Value $caption
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "legalnoticetext" -Value $text
-    Write-Host " > ê²½ê³  ë©”ì‹œì§€(ë°°ë„ˆ) ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > °æ°í ¸Þ½ÃÁö(¹è³Ê) ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ê²½ê³  ë©”ì‹œì§€ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] °æ°í ¸Þ½ÃÁö ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-76: ì‚¬ìš©ìžë³„ í™ˆ ë””ë ‰í„°ë¦¬ ê¶Œí•œ ì„¤ì •
-Write-Host "W-76: ì‚¬ìš©ìž í™ˆ ë””ë ‰í„°ë¦¬ Everyone ê¶Œí•œ ì œê±°" -ForegroundColor Cyan
+# W-76: »ç¿ëÀÚº° È¨ µð·ºÅÍ¸® ±ÇÇÑ ¼³Á¤
+Write-Host "W-76: »ç¿ëÀÚ È¨ µð·ºÅÍ¸® Everyone ±ÇÇÑ Á¦°Å" -ForegroundColor Cyan
 try {
     $exclude = @("All Users", "Default", "Default User", "Public", "DefaultAppPool", "MSSQL", "defaultuser0")
     Get-ChildItem 'C:\Users' -Directory | Where-Object { $exclude -notcontains $_.Name } | ForEach-Object {
         try {
             icacls $_.FullName /remove:g "Everyone" /T > $null 2>&1
-            Write-Host " > $_.FullName ê¶Œí•œ ì œê±° ì™„ë£Œ" -ForegroundColor Green
+            Write-Host " > $_.FullName ±ÇÇÑ Á¦°Å ¿Ï·á" -ForegroundColor Green
         } catch {
-            Write-Host " > $_.FullName ê¶Œí•œ ì œê±° ì‹¤íŒ¨: $_" -ForegroundColor Red
+            Write-Host " > $_.FullName ±ÇÇÑ Á¦°Å ½ÇÆÐ: $_" -ForegroundColor Red
         }
     }
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì‚¬ìš©ìž í™ˆ ë””ë ‰í„°ë¦¬ ê¶Œí•œ ì œê±° ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] »ç¿ëÀÚ È¨ µð·ºÅÍ¸® ±ÇÇÑ Á¦°Å ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-77: LAN Manager ì¸ì¦ ìˆ˜ì¤€
-Write-Host "W-77: LAN Manager ì¸ì¦ ìˆ˜ì¤€ ì„¤ì •" -ForegroundColor Cyan
+# W-77: LAN Manager ÀÎÁõ ¼öÁØ
+Write-Host "W-77: LAN Manager ÀÎÁõ ¼öÁØ ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCompatibilityLevel" -Value 3
-    Write-Host " > LAN Manager ì¸ì¦ ìˆ˜ì¤€ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > LAN Manager ÀÎÁõ ¼öÁØ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] LAN Manager ì¸ì¦ ìˆ˜ì¤€ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] LAN Manager ÀÎÁõ ¼öÁØ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-78: ë³´ì•ˆ ì±„ë„ ë°ì´í„° ë””ì§€í„¸ ì•”í˜¸í™”/ì„œëª…
-Write-Host "W-78: ë³´ì•ˆ ì±„ë„ ë°ì´í„° ì•”í˜¸í™”/ì„œëª… ì„¤ì •" -ForegroundColor Cyan
+# W-78: º¸¾È Ã¤³Î µ¥ÀÌÅÍ µðÁöÅÐ ¾ÏÈ£È­/¼­¸í
+Write-Host "W-78: º¸¾È Ã¤³Î µ¥ÀÌÅÍ ¾ÏÈ£È­/¼­¸í ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "RequireSignOrSeal" -Value 1
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "SealSecureChannel" -Value 1
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "SignSecureChannel" -Value 1
-    Write-Host " > ë³´ì•ˆ ì±„ë„ ì•”í˜¸í™”/ì„œëª… ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > º¸¾È Ã¤³Î ¾ÏÈ£È­/¼­¸í ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ë³´ì•ˆ ì±„ë„ ì•”í˜¸í™”/ì„œëª… ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] º¸¾È Ã¤³Î ¾ÏÈ£È­/¼­¸í ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# W-80: ì»´í“¨í„° ê³„ì • ì•”í˜¸ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„
-Write-Host "W-80: ì»´í“¨í„° ê³„ì • ì•”í˜¸ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„(90ì¼) ì„¤ì •" -ForegroundColor Cyan
+# W-80: ÄÄÇ»ÅÍ °èÁ¤ ¾ÏÈ£ ÃÖ´ë »ç¿ë ±â°£
+Write-Host "W-80: ÄÄÇ»ÅÍ °èÁ¤ ¾ÏÈ£ ÃÖ´ë »ç¿ë ±â°£(90ÀÏ) ¼³Á¤" -ForegroundColor Cyan
 try {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "MaximumPasswordAge" -Value 90
-    Write-Host " > ì»´í“¨í„° ê³„ì • ì•”í˜¸ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì™„ë£Œ" -ForegroundColor Green
+    Write-Host " > ÄÄÇ»ÅÍ °èÁ¤ ¾ÏÈ£ ÃÖ´ë »ç¿ë ±â°£ ¼³Á¤ ¿Ï·á" -ForegroundColor Green
 } catch {
-    Write-Host " > [ì˜¤ë¥˜] ì»´í“¨í„° ê³„ì • ì•”í˜¸ ìµœëŒ€ ì‚¬ìš© ê¸°ê°„ ì„¤ì • ì‹¤íŒ¨: $_" -ForegroundColor Red
+    Write-Host " > [¿À·ù] ÄÄÇ»ÅÍ °èÁ¤ ¾ÏÈ£ ÃÖ´ë »ç¿ë ±â°£ ¼³Á¤ ½ÇÆÐ: $_" -ForegroundColor Red
 }
 
-# [ìŠ¤í¬ë¦½íŠ¸ ë§¨ ë§ˆì§€ë§‰ì— ê²½ê³  ë©”ì‹œì§€ ì¶œë ¥]
+# [½ºÅ©¸³Æ® ¸Ç ¸¶Áö¸·¿¡ °æ°í ¸Þ½ÃÁö Ãâ·Â]
 $warningMsg = @"
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-âš  [ì£¼ì˜] ì¼ë¶€ ë³´ì•ˆ ì„¤ì •ì€ ì„œë²„ì˜ ì‹¤ì œ ìš©ë„ì— ë”°ë¼
-   ì„œë¹„ìŠ¤ ìš´ì˜ì— ì˜í–¥ì„ ì¤„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+? [ÁÖÀÇ] ÀÏºÎ º¸¾È ¼³Á¤Àº ¼­¹öÀÇ ½ÇÁ¦ ¿ëµµ¿¡ µû¶ó
+   ¼­ºñ½º ¿î¿µ¿¡ ¿µÇâÀ» ÁÙ ¼ö ÀÖ½À´Ï´Ù.
 
-[W-74] ì„¸ì…˜ ìœ íœ´ì‹œê°„ í›„ ìžë™ ì¢…ë£Œ(AutoDisconnect) ì„¤ì •ì´ ì ìš©ë¨
-   - í˜„ìž¬ ê°’: 15ë¶„
-   - íŒŒì¼ ê³µìœ , ìž¥ì‹œê°„ ì„¸ì…˜ ìœ ì§€ê°€ í•„ìš”í•œ ì„œë²„ì—ì„œëŠ”
-     ì ‘ì† ëŠê¹€, íŒŒì¼ ì €ìž¥ ì˜¤ë¥˜ê°€ ë°œìƒí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
-   - ì„¸ì…˜ ìœ ì§€ê°€ í•„ìš”í•˜ë©´ ì•„ëž˜ ëª…ë ¹ìœ¼ë¡œ ì„¤ì • ë³µì›ì´ ê°€ëŠ¥í•©ë‹ˆë‹¤.
+[W-74] ¼¼¼Ç À¯ÈÞ½Ã°£ ÈÄ ÀÚµ¿ Á¾·á(AutoDisconnect) ¼³Á¤ÀÌ Àû¿ëµÊ
+   - ÇöÀç °ª: 15ºÐ
+   - ÆÄÀÏ °øÀ¯, Àå½Ã°£ ¼¼¼Ç À¯Áö°¡ ÇÊ¿äÇÑ ¼­¹ö¿¡¼­´Â
+     Á¢¼Ó ²÷±è, ÆÄÀÏ ÀúÀå ¿À·ù°¡ ¹ß»ýÇÒ ¼ö ÀÖ½À´Ï´Ù.
+   - ¼¼¼Ç À¯Áö°¡ ÇÊ¿äÇÏ¸é ¾Æ·¡ ¸í·ÉÀ¸·Î ¼³Á¤ º¹¿øÀÌ °¡´ÉÇÕ´Ï´Ù.
      Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Services\LanManServer\Parameters' -Name 'AutoDisconnect' -Value -1
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 "@
 
 Write-Host $warningMsg -ForegroundColor Yellow
 Write-Host ""
-Write-Host "ê³„ì†í•˜ë ¤ë©´ [Enter] í‚¤ë¥¼ ëˆ„ë¥´ì„¸ìš”." -ForegroundColor Cyan
+Write-Host "°è¼ÓÇÏ·Á¸é [Enter] Å°¸¦ ´©¸£¼¼¿ä." -ForegroundColor Cyan
 [void][System.Console]::ReadLine()

@@ -1,24 +1,24 @@
-ï»¿@echo off
-REM í˜„ì¬ BAT íŒŒì¼ì´ ìœ„ì¹˜í•œ í´ë”ë¡œ ì´ë™
+@echo off
+REM ÇöÀç BAT ÆÄÀÏÀÌ À§Ä¡ÇÑ Æú´õ·Î ÀÌµ¿
 cd /d %~dp0
 
-REM ê¸°ì¡´ ì‹¤í–‰ì •ì±…(CurrentUser ìŠ¤ì½”í”„)ì„ ì €ì¥
+REM ±âÁ¸ ½ÇÇàÁ¤Ã¥(CurrentUser ½ºÄÚÇÁ)À» ÀúÀå
 for /f "delims=" %%a in ('powershell -NoProfile -Command "Get-ExecutionPolicy -Scope CurrentUser"') do set OLDPOLICY=%%a
 
-REM ì¼ì‹œì ìœ¼ë¡œ ì‹¤í–‰ì •ì±…ì„ CurrentUser ìŠ¤ì½”í”„ë¡œ ë³€ê²½ (ê´€ë¦¬ì ê¶Œí•œ ë¶ˆí•„ìš”)
+REM ÀÏ½ÃÀûÀ¸·Î ½ÇÇàÁ¤Ã¥À» CurrentUser ½ºÄÚÇÁ·Î º¯°æ (°ü¸®ÀÚ ±ÇÇÑ ºÒÇÊ¿ä)
 powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force"
 
-REM Windows Server 2019.ps1 ì‹¤í–‰ (ê²½ë¡œ ì§€ì • ì¤‘ìš”)
+REM Windows Server 2019.ps1 ½ÇÇà (°æ·Î ÁöÁ¤ Áß¿ä)
 powershell -NoProfile -ExecutionPolicy RemoteSigned -File "%~dp0Windows Server 2019.ps1"
 
-REM ì‹¤í–‰ì •ì±…(CurrentUser ìŠ¤ì½”í”„) ì›ìƒë³µêµ¬
+REM ½ÇÇàÁ¤Ã¥(CurrentUser ½ºÄÚÇÁ) ¿ø»óº¹±¸
 powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy %OLDPOLICY% -Force"
 
 echo.
-echo [ì•ˆë‚´] Windows Server 2019.ps1 ì‹¤í–‰ ì™„ë£Œ. ì‹¤í–‰ ì •ì±…(CurrentUser ìŠ¤ì½”í”„)ì„ [%OLDPOLICY%]ë¡œ ë³µêµ¬í–ˆìŠµë‹ˆë‹¤.
-echo ì¬ë¶€íŒ…ì´ í•„ìš”í•œ ì„¤ì •ì´ ì ìš©ë˜ì—ˆìŠµë‹ˆë‹¤.
+echo [¾È³»] Windows Server 2019.ps1 ½ÇÇà ¿Ï·á. ½ÇÇà Á¤Ã¥(CurrentUser ½ºÄÚÇÁ)À» [%OLDPOLICY%]·Î º¹±¸Çß½À´Ï´Ù.
+echo ÀçºÎÆÃÀÌ ÇÊ¿äÇÑ ¼³Á¤ÀÌ Àû¿ëµÇ¾ú½À´Ï´Ù.
 echo.
-set /p REBOOT=ê³„ì†í•˜ë ¤ë©´ [Enter] í‚¤ë¥¼ ëˆ„ë¥´ì„¸ìš”. (ëˆ„ë¥´ë©´ ì¦‰ì‹œ ì¬ë¶€íŒ…ë©ë‹ˆë‹¤)
+set /p REBOOT=°è¼ÓÇÏ·Á¸é [Enter] Å°¸¦ ´©¸£¼¼¿ä. (´©¸£¸é Áï½Ã ÀçºÎÆÃµË´Ï´Ù)
 
-REM ì¬ë¶€íŒ… ì‹¤í–‰
+REM ÀçºÎÆÃ ½ÇÇà
 shutdown /r /t 0
