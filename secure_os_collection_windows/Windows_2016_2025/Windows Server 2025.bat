@@ -1,7 +1,7 @@
 @echo off
 chcp 65001>nul & setlocal enabledelayedexpansion
 rem ──────────────────────────────────────────
-rem  Windows Server 2022 보안 설정 자동화 배치
+rem  Windows Server 보안 설정 자동화 배치
 rem ──────────────────────────────────────────
 
 rem 현재 BAT 위치로 이동
@@ -14,7 +14,7 @@ for /f "delims=" %%a in ('
 if "%OLDPOLICY%"=="" set "OLDPOLICY=Undefined"
 
 rem PowerShell 스크립트 실행 (정책 변경 없이 Bypass 사용)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windows Server 2022.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windows Server 2025.ps1"
 set "PS_ERR=%errorlevel%"
 
 rem 실행정책 복원
@@ -40,5 +40,5 @@ if errorlevel 2 (
   exit /b 0
 )
 
-shutdown /r /t 30 /c "Windows Server 2022 보안 설정 적용 ? 30초 후 자동 재부팅"
+shutdown /r /t 30 /c "Windows Server 보안 설정 적용 ? 30초 후 자동 재부팅"
 exit /b 0
