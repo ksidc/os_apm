@@ -464,7 +464,6 @@ try {
 # ──────────────────────────────────────────────────────────
 try {
     # 계정 관리 감사
-    auditpol /set /subcategory:"컴퓨터 계정 관리" /failure:enable
     auditpol /set /subcategory:"사용자 계정 관리" /failure:enable
     auditpol /set /subcategory:"보안 그룹 관리" /success:enable /failure:enable
 
@@ -773,3 +772,4 @@ Write-Info ""                  # 빈 줄 (일관된 출력 함수 사용)
 Write-Info "계속하려면 [Enter] 키를 누르세요."
 
 [void][Console]::ReadLine()
+
