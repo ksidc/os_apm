@@ -5,7 +5,7 @@ source /usr/local/src/secure_os_collection/r8/common.sh
 # 시스템 설정 관련 작업
 install_packages() {
     log_info "install_packages 시작"
-    local pkgs=(epel-release chrony pandoc iptables iptables-services rsyslog lsof net-tools psmisc lrzsz screen iftop smartmontools vim unzip wget)
+    local pkgs=(epel-release chrony rsyslog lsof net-tools psmisc lrzsz screen iftop smartmontools vim unzip wget)
     for pkg in "${pkgs[@]}"; do
         if rpm -q "$pkg" &>/dev/null; then
             log_info "$pkg 이미 설치됨"
@@ -79,10 +79,20 @@ configure_motd() {
     log_info "configure_motd 시작"
     backup_file /etc/motd
     cat <<'EOF' > /etc/motd
-********************************************************************
-* 본 시스템은 허가된 사용자만 이용하실 수 있습니다.                    *
-* 부당한 방법으로 전산망에 접속하거나 정보를 삭제/변경/유출하는        *
-* 사용자는 관련 법령에 따라 처벌 받게 됩니다.                          *
+"********************************************************************
+*                                                                  *
+* 본 시스템은 허가된 사용자만 이용하실 수 있습니다.                *
+* 부당한 방법으로 전산망에 접속하거나 정보를 삭제/변경/유출하는    *
+* 관련 법령에 따라 처벌 받게 됩니다.                               *
+*                                                                  *
+* This system is for the use of authorized users only.  Usage of   *
+* this system may be monitored and recorded by system personnel.   *
+*                                                                  *
+* Anyone using this system expressly consents to such monitoring   *
+* and is advised that if such monitoring reveals possible          *
+* evidence of criminal activity, system personnel may provide the  *
+* evidence from such monitoring to law enforcement officials.      *
+*                                                                  *
 ********************************************************************
 EOF
     log_info "motd 설정 완료"
@@ -128,7 +138,7 @@ step2_change_ssh_port() {
         read -r -p "변경 없이 진행? (Y/N): " proceed < /dev/tty
         if [[ "$proceed" =~ ^[Yy]$ ]]; then
             log_info "SSH 포트 변경 생략"
-            NEW_SSH_PORT="$old_port (변경 없음)"
+            NEW_SSH_PORT="$old_port"   # 숫자만 저장
             return
         else
             step2_change_ssh_port
