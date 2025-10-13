@@ -13,7 +13,7 @@ $log = "C:\Windows\SecurityScript_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 # ──────────────────────────────────────────────────────────
 # 0. 사용자 조정 파라미터
 # ──────────────────────────────────────────────────────────
-$NewAdminName   = 'iteasy'
+$NewAdminName   = 'iteasy_admin'
 $Lockout        = @{Threshold = 5; Duration = 60; Window = 60}
 $AccountWhite   = @($NewAdminName,'Guest','WDAGUtilityAccount','DefaultAccount')
 $BlockServices  = @('SNMP','SNMPTRAP','Telnet','Fax','TlntSvr','TrkWks','TrkSvr','Spooler')
@@ -570,14 +570,6 @@ try {
 # 31. Windows Update 자동 업데이트 중지
 # ──────────────────────────────────────────────────────────
 try {
-    # Windows Update 서비스 중지·비활성화
-    Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
-    Set-Service  -Name wuauserv -StartupType Disabled -ErrorAction SilentlyContinue
-
-    # Windows Update Medic Service(재활성화 방지) 중지·비활성화
-    sc.exe stop WaaSMedicSvc   > $null 2>&1
-    sc.exe config WaaSMedicSvc start= disabled  > $null 2>&1
-
     # 예약 작업 비활성화 (표 출력 제거)
     Disable-ScheduledTask -TaskName "\Microsoft\Windows\WindowsUpdate\Scheduled Start" -ErrorAction SilentlyContinue | Out-Null
     Disable-ScheduledTask -TaskName "\Microsoft\Windows\UpdateOrchestrator\Scheduled Scan" -ErrorAction SilentlyContinue | Out-Null

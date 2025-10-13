@@ -602,13 +602,11 @@ try {
 # 31. Windows Update 자동 업데이트 중지
 # ──────────────────────────────────────────────────────────
 try {
-    # Windows Update 서비스 중지·비활성화
-    Stop-Service  -Name wuauserv    -Force -ErrorAction SilentlyContinue
-    Set-Service   -Name wuauserv    -StartupType Disabled
-
-    # Windows Update Medic Service(재활성화 방지) 중지·비활성화
-    sc.exe stop   WaaSMedicSvc   > $null 2>&1
-    sc.exe config WaaSMedicSvc start= disabled  > $null 2>&1
+   # 자동 업데이트만 중지 (서비스는 그대로 유지)
+    $wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+    if (-not (Test-Path $wu)) {
+        New-Item -Path $wu | Out-Null
+    }
 
     # 자동 업데이트 정책(레지스트리) 비활성화
 $wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'

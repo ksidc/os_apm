@@ -7,6 +7,35 @@ rem ──────────────────────────────────────
 rem 현재 BAT 위치로 이동
 cd /d "%~dp0"
 
+:: 현재 배치 파일 위치 기준 백업 폴더 설정
+set "BACKUP_DIR=%~dp0backup"
+if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
+
+echo [*] 백업 시작: %BACKUP_DIR%
+set "DATESTR=%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%"
+set "DATESTR=%DATESTR: =0%"
+
+:: 1. 로컬 보안 정책 백업
+echo [*] 로컬 보안 정책 백업 중...
+secedit /export /cfg "%BACKUP_DIR%\security_policy_%DATESTR%.inf" /areas SECURITYPOLICY USER_RIGHTS >nul 2>&1
+
+:: 2. 전체 레지스트리 백업 (HKLM, HKCU, HKU, HKCR, HKCC)
+echo [*] 전체 레지스트리 백업 중... (약간 시간 소요)
+reg export HKLM "%BACKUP_DIR%\HKLM_%DATESTR%.reg" /y >nul 2>&1
+reg export HKCU "%BACKUP_DIR%\HKCU_%DATESTR%.reg" /y >nul 2>&1
+reg export HKU  "%BACKUP_DIR%\HKU_%DATESTR%.reg"  /y >nul 2>&1
+reg export HKCR "%BACKUP_DIR%\HKCR_%DATESTR%.reg" /y >nul 2>&1
+reg export HKCC "%BACKUP_DIR%\HKCC_%DATESTR%.reg" /y >nul 2>&1
+
+:: 3. 감사 정책 백업
+echo [*] 감사 정책 백업 중...
+auditpol /backup /file:"%BACKUP_DIR%\auditpol_%DATESTR%.csv"
+
+:: 4. 사용자 및 그룹 정보 백업
+echo [*] 사용자/그룹 정보 백업 중...
+net user > "%BACKUP_DIR%\users_%DATESTR%.txt"
+net localgroup administrators > "%BACKUP_DIR%\administrators_%DATESTR%.txt"
+
 rem 기존 실행정책(CurrentUser) 백업
 for /f "delims=" %%a in ('
   powershell -NoProfile -Command "Get-ExecutionPolicy -Scope CurrentUser"
