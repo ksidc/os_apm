@@ -1,5 +1,5 @@
 #!/bin/bash
-# iptables.sh : RH-Firewall-1-INPUT 체인 기반 규칙 생성
+# iptables.sh : Rocky 9 방화벽 설정 (사용자 선택 기반)
 # 사용: source 로 호출되거나 단독 실행 가능
 
 set -euo pipefail
@@ -9,26 +9,40 @@ source /usr/local/src/secure_os_collection/r9/common.sh
 SSH_PORT="${NEW_SSH_PORT:-$(grep -iE '^[# ]*Port[[:space:]]+[0-9]+' /etc/ssh/sshd_config | awk '{print $2}' | tail -n1)}"
 SSH_PORT="${SSH_PORT:-22}"
 
-ensure_iptables() {
-    log_info "ensure_iptables 시작"
-    if command -v firewall-cmd >/dev/null 2>&1; then
-        systemctl stop firewalld || true
-        systemctl disable firewalld || true
-        systemctl mask firewalld || true
-        log_info "firewalld mask 처리 완료"
-    fi
+# iptables 규칙 파일 경로 (전역 변수)
+rules="/etc/sysconfig/iptables"
+
+########################################
+# 1. firewalld 완전 비활성화 (공통 처리)
+########################################
+if command -v firewall-cmd >/dev/null 2>&1; then
+    systemctl stop firewalld || true
+    systemctl disable firewalld || true
+    systemctl mask firewalld || true
+    log_info "firewalld 비활성화(mask) 완료"
+fi
+
+########################################
+# 2. 사용자 선택
+########################################
+echo "로컬 방화벽(iptables)를 사용하시겠습니까? (y/n)"
+read -r USE_IPTABLES
+
+########################################
+# 3. iptables 적용 여부 분기
+########################################
+if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
+    log_info "iptables 방화벽을 설정합니다."
+
+    # iptables 패키지 설치
     if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
         dnf install -y iptables iptables-services || { log_error "iptables" "설치 실패"; exit 1; }
         log_info "iptables/iptables-services 설치 완료"
     else
         log_info "iptables/iptables-services 이미 설치됨"
     fi
-}
 
-write_rules() {
-    log_info "iptables 규칙 쓰기 시작"
-    local rules=/etc/sysconfig/iptables
-
+    # 규칙 파일 작성
     cat > "$rules" <<EOF
 *filter
 :INPUT ACCEPT [0:0]
@@ -42,18 +56,10 @@ write_rules() {
 # 기본 허용
 -A RH-Firewall-1-INPUT -i lo -j ACCEPT
 -A RH-Firewall-1-INPUT -p icmp --icmp-type any -j ACCEPT
--A RH-Firewall-1-INPUT -p 50 -j ACCEPT
--A RH-Firewall-1-INPUT -p 51 -j ACCEPT
--A RH-Firewall-1-INPUT -p udp --dport 5353 -d 224.0.0.251 -j ACCEPT
--A RH-Firewall-1-INPUT -p udp --dport 631 -j ACCEPT
--A RH-Firewall-1-INPUT -p tcp --dport 631 -j ACCEPT
--A RH-Firewall-1-INPUT -p tcp --dport 53 -j ACCEPT
--A RH-Firewall-1-INPUT -p udp --dport 53 -j ACCEPT
--A RH-Firewall-1-INPUT -p udp --dport 123 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 ######################################################################################################
-# KSIDC SSH Allow
+# KSIDC SSH Allow (관리자 IP)
 -A RH-Firewall-1-INPUT -p tcp -s 116.122.36.109 -j ACCEPT
 -A RH-Firewall-1-INPUT -p tcp -s 218.50.1.130 -j ACCEPT
 -A RH-Firewall-1-INPUT -p tcp -s 110.9.167.210 -j ACCEPT
@@ -95,19 +101,15 @@ EOF
 
     chmod 600 "$rules"
     log_info "iptables 규칙 파일 생성: $rules"
-}
 
-apply_iptables() {
-    log_info "iptables 적용 시작"
+    # 서비스 적용
     systemctl enable iptables
     systemctl restart iptables || {
         echo "❌ iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요"
         exit 1
     }
     log_info "iptables 적용 및 검증 완료"
-}
 
-# 실행 흐름
-ensure_iptables
-write_rules
-apply_iptables
+else
+    log_info "iptables 사용하지 않음 → firewalld 비활성화 상태로 유지"
+fi

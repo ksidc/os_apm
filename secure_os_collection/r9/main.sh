@@ -72,6 +72,13 @@ source /usr/local/src/secure_os_collection/r9/services.sh || {
 }
 log_info "services.sh 실행 완료"
 
+log_info "apm.sh 실행 시작"
+source /usr/local/src/secure_os_collection/r9/apm.sh || { 
+    log_error "main" "apm.sh 실행 실패"
+    exit 1
+}
+log_info "apm.sh 실행 완료"
+
 # 패키지 업데이트
 log_info "dnf update 시작"
 dnf -y update || { 
@@ -101,13 +108,11 @@ SUMMARY+="불필요 사용자 삭제: 적용됨 (대상: ${DELETED_USERS:-없음
 SUMMARY+="SSH 포트 변경: $NEW_SSH_PORT\n"
 SUMMARY+="패스워드 정책: $PASSWORD_POLICY_SUMMARY\n"
 SUMMARY+="새 계정 생성: $CREATED_USER\n"
-SUMMARY+="방화벽 설정: 적용됨"
+SUMMARY+="방화벽 설정: 적용됨\n"
 SUMMARY+="SELinux 비활성화: 적용됨\n"
 SUMMARY+="sysctl/limits 튜닝: 적용됨\n"
 SUMMARY+="서비스 비활성화: 적용됨 (대상: ${SERVICES_DISABLED:-없음})\n"
 SUMMARY+="백업 위치: $BACKUP_DIR (롤백: bash /usr/local/src/secure_os_collection/r9/rollback.sh 실행)\n"
-SUMMARY+="주의: 고객 데이터 보호를 위해 /etc/ 백업 확인 ($BACKUP_DIR). 다운타임 최소화 위해 off-peak 시간 리부팅 권장.\n"
-
 # 요약 출력 및 저장
 echo -e "\n=== 실행 결과 요약 ===\n$SUMMARY"
 echo -e "$SUMMARY" > "$RESULT_FILE"
