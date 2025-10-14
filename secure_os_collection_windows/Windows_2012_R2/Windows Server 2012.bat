@@ -1,74 +1,76 @@
 @echo off
 chcp 65001>nul & setlocal enabledelayedexpansion
-rem ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-rem  Windows Server 2012 º¸¾È ¼³Á¤ ÀÚµ¿È­ ¹èÄ¡
-rem ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+:: â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+::  Windows Server 2012 ë³´ì•ˆ ì„¤ì • ìë™í™” ë°°ì¹˜
+:: â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-rem ÇöÀç BAT À§Ä¡·Î ÀÌµ¿
+:: í˜„ì¬ BAT ìœ„ì¹˜ë¡œ ì´ë™
 cd /d "%~dp0"
 
-:: ÇöÀç ¹èÄ¡ ÆÄÀÏ À§Ä¡ ±âÁØ ¹é¾÷ Æú´õ ¼³Á¤
+:: í˜„ì¬ ë°°ì¹˜ íŒŒì¼ ìœ„ì¹˜ ê¸°ì¤€ ë°±ì—… í´ë” ì„¤ì •
 set "BACKUP_DIR=%~dp0backup"
 if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
-echo [*] ¹é¾÷ ½ÃÀÛ: %BACKUP_DIR%
+echo [*] ë°±ì—… ì‹œì‘: %BACKUP_DIR%
 set "DATESTR=%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%"
 set "DATESTR=%DATESTR: =0%"
 
-:: 1. ·ÎÄÃ º¸¾È Á¤Ã¥ ¹é¾÷
-echo [*] ·ÎÄÃ º¸¾È Á¤Ã¥ ¹é¾÷ Áß...
+:: 1. ë¡œì»¬ ë³´ì•ˆ ì •ì±… ë°±ì—…
+echo [*] ë¡œì»¬ ë³´ì•ˆ ì •ì±… ë°±ì—… ì¤‘...
 secedit /export /cfg "%BACKUP_DIR%\security_policy_%DATESTR%.inf" /areas SECURITYPOLICY USER_RIGHTS >nul 2>&1
 
-:: 2. ÀüÃ¼ ·¹Áö½ºÆ®¸® ¹é¾÷ (HKLM, HKCU, HKU, HKCR, HKCC)
-echo [*] ÀüÃ¼ ·¹Áö½ºÆ®¸® ¹é¾÷ Áß... (¾à°£ ½Ã°£ ¼Ò¿ä)
+:: 2. ì „ì²´ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ë°±ì—… (HKLM, HKCU, HKU, HKCR, HKCC)
+echo [*] ì „ì²´ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ë°±ì—… ì¤‘... (ì•½ê°„ ì‹œê°„ ì†Œìš”)
 reg export HKLM "%BACKUP_DIR%\HKLM_%DATESTR%.reg" /y >nul 2>&1
 reg export HKCU "%BACKUP_DIR%\HKCU_%DATESTR%.reg" /y >nul 2>&1
 reg export HKU  "%BACKUP_DIR%\HKU_%DATESTR%.reg"  /y >nul 2>&1
 reg export HKCR "%BACKUP_DIR%\HKCR_%DATESTR%.reg" /y >nul 2>&1
 reg export HKCC "%BACKUP_DIR%\HKCC_%DATESTR%.reg" /y >nul 2>&1
 
-:: 3. °¨»ç Á¤Ã¥ ¹é¾÷
-echo [*] °¨»ç Á¤Ã¥ ¹é¾÷ Áß...
+:: 3. ê°ì‚¬ ì •ì±… ë°±ì—…
+echo [*] ê°ì‚¬ ì •ì±… ë°±ì—… ì¤‘...
 auditpol /backup /file:"%BACKUP_DIR%\auditpol_%DATESTR%.csv"
 
-:: 4. »ç¿ëÀÚ ¹× ±×·ì Á¤º¸ ¹é¾÷
-echo [*] »ç¿ëÀÚ/±×·ì Á¤º¸ ¹é¾÷ Áß...
+:: 4. ì‚¬ìš©ì ë° ê·¸ë£¹ ì •ë³´ ë°±ì—…
+echo [*] ì‚¬ìš©ì/ê·¸ë£¹ ì •ë³´ ë°±ì—… ì¤‘...
 net user > "%BACKUP_DIR%\users_%DATESTR%.txt"
 net localgroup administrators > "%BACKUP_DIR%\administrators_%DATESTR%.txt"
 
-rem ±âÁ¸ ½ÇÇàÁ¤Ã¥(CurrentUser) ¹é¾÷
+:: ê¸°ì¡´ ì‹¤í–‰ì •ì±…(CurrentUser) ë°±ì—…
 for /f "delims=" %%a in ('
   powershell -NoProfile -Command "Get-ExecutionPolicy -Scope CurrentUser"
 ') do set "OLDPOLICY=%%a"
 if "%OLDPOLICY%"=="" set "OLDPOLICY=Undefined"
 
-rem PowerShell ½ºÅ©¸³Æ® ½ÇÇà (Á¤Ã¥ º¯°æ ¾øÀÌ Bypass »ç¿ë)
+:: PowerShell ìŠ¤í¬ë¦½íŠ¸ ì‹¤í–‰ (ì •ì±… ë³€ê²½ ì—†ì´ Bypass ì‚¬ìš©)
 set "PS1PATH=%~dp0Windows Server 2012.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%PS1PATH%'"
 set "PS_ERR=%errorlevel%"
 
-rem ½ÇÇàÁ¤Ã¥ º¹¿ø
+:: ì‹¤í–‰ì •ì±… ë³µì›
 if /i "%OLDPOLICY%"=="Undefined" (
   powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser Undefined -Force"
 ) else (
   powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser %OLDPOLICY% -Force"
 )
 
+@echo off
+
 echo.
 if %PS_ERR% NEQ 0 (
-  echo [¿À·ù] PowerShell ½ºÅ©¸³Æ®°¡ ¿À·ù ÄÚµå %PS_ERR% ·Î Á¾·áµÇ¾ú½À´Ï´Ù.
+  echo [ì˜¤ë¥˜] PowerShell ìŠ¤í¬ë¦½íŠ¸ê°€ ì˜¤ë¥˜ ì½”ë“œ %PS_ERR% ë¡œ ì¢…ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.
   pause
   exit /b %PS_ERR%
 )
 
-echo [¾È³»] º¸¾È ¼³Á¤ Àû¿ëÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù. (½ÇÇàÁ¤Ã¥: %OLDPOLICY% ·Î º¹¿ø)
-echo ÀçºÎÆÃÀÌ ÇÊ¿äÇÑ Ç×¸ñÀÌ Æ÷ÇÔµÇ¾î ÀÖ½À´Ï´Ù.
+echo [ì•ˆë‚´] ë³´ì•ˆ ì„¤ì • ì ìš©ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤. (ì‹¤í–‰ì •ì±…: %OLDPOLICY% ë¡œ ë³µì›)
+echo ì¬ë¶€íŒ…ì´ í•„ìš”í•œ í•­ëª©ì´ í¬í•¨ë˜ì–´ ìˆìŠµë‹ˆë‹¤.
 
-choice /c YN /n /m "Áö±İ ÀçºÎÆÃÇÏ½Ã°Ú½À´Ï±î? (Y/N): "
+choice /c YN /n /m "ì§€ê¸ˆ ì¬ë¶€íŒ…í•˜ì‹œê² ìŠµë‹ˆê¹Œ? (Y/N): "
 if errorlevel 2 (
-  echo ÀçºÎÆÃÀ» Ãë¼ÒÇß½À´Ï´Ù.
+  echo ì¬ë¶€íŒ…ì„ ì·¨ì†Œí–ˆìŠµë‹ˆë‹¤.
   exit /b 0
 )
 
-shutdown /r /t 30 /c "Windows Server 2012 º¸¾È ¼³Á¤ Àû¿ë ? 30ÃÊ ÈÄ ÀÚµ¿ ÀçºÎÆÃ"
+shutdown /r /t 30 /c "Windows Server 2012 ë³´ì•ˆ ì„¤ì • ì ìš© ? 30ì´ˆ í›„ ìë™ ì¬ë¶€íŒ…"
 exit /b 0
