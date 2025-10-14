@@ -78,6 +78,14 @@ dnf -y update || {
     log_error "main" "dnf update 실패"
     exit 1
 }
+
+log_info "apm.sh 실행 시작"
+source /usr/local/src/secure_os_collection/r8/apm.sh || {
+	    log_error "main" "apm.sh 실행 실패"
+    exit 1
+    }
+log_info "apm.sh 실행 완료"
+
 log_info "dnf update 완료"
 SUMMARY+="패키지 업데이트: 적용됨\n"
 
