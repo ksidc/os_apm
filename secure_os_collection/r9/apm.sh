@@ -26,6 +26,15 @@ yes|y|Y|YES)
     # VirtualHost 설정 (conf.d 별도 파일로 추가)
     IPaddress=$(hostname -I | awk '{print $1}')
     mkdir -p /home/iteasy
+
+    cat <<EOF >> /etc/httpd/conf/httpd.conf
+<Directory "/home/iteasy">
+ AllowOverride None
+ # Allow open access:
+ Require all granted
+</Directory>
+EOF
+
     cat <<EOF > /etc/httpd/conf.d/vhost.conf
 <VirtualHost *:80>
     DocumentRoot /home/iteasy
@@ -85,7 +94,6 @@ EOF
     ########################################
     # PHP 8.1 설치 및 설정
     ########################################
-    #dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
     dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
     dnf module disable php:remi-7.* -y
     dnf module enable php:remi-8.1 -y
