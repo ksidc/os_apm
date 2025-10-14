@@ -85,14 +85,11 @@ EOF
     ########################################
     # PHP 8.1 설치 및 설정
     ########################################
-    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.9.rpm
+    #dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
     dnf module disable php:remi-7.* -y
     dnf module enable php:remi-8.1 -y
-    dnf install -y php-bcmath php-bz2 php-cgi php-cli php-curl php-dba php-enchant php-fpm \
-                   php-gd php-gmp php-imap php-intl php-json php-ldap php-mbstring php-mysql \
-                   php-odbc php-opcache php-pgsql php-pspell php-readline php-snmp php-soap \
-                   php-sqlite3 php-tidy php-xml php-xmlrpc php-xsl php-zip
+    dnf install -y php php-bcmath php-bz2 php-cgi php-cli php-curl php-dba php-enchant php-fpm php-gd php-gmp php-intl php-json php-ldap php-mbstring php-mysqlnd php-odbc php-opcache php-pgsql php-readline php-snmp php-soap php-sqlite3 php-tidy php-xml php-xsl php-zip
 
     echo "<?php phpinfo(); ?>" > /home/iteasy/info.php
 
