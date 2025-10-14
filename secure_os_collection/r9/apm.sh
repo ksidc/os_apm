@@ -34,6 +34,7 @@ yes|y|Y|YES)
  Require all granted
 </Directory>
 EOF
+chmod 755 /home/iteasy
 
     cat <<EOF > /etc/httpd/conf.d/vhost.conf
 <VirtualHost *:80>
