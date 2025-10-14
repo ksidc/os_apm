@@ -1,0 +1,10 @@
+localhost 80
+SEND "OPTIONS / HTTP/1.0\m\m"
+SEND "\m"
+WAIT "#"
+SEND "\m"
+WAIT "#"
+SEND "\m"
+WAIT "#"
+SEND "quit\m"
+
