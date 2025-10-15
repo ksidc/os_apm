@@ -1,79 +1,100 @@
 #!/bin/bash
-# c7/services.sh : 불필요 서비스/설정 비활성화
-# (root 로그인/SSH 포트/계정잠금/패스워드 만료 등은 다루지 않음)
+set -euo pipefail
 
-source /usr/local/src/secure_os_collection/c7/common.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
+# [제거 대상 아님] 항목만 유지
+# - finger 비활성화
+# - anonymous FTP(vsftpd) 차단
+# - r 계열(rsh/rlogin/rexec) 비활성화
+# - cron/at 권한 강화
+# - xinetd echo/daytime/chargen 비활성화
+# - autofs, NIS 관련 비활성화
+# - tftp/talk 비활성화
+# - postfix VRFY 비활성화 (postfix 설치된 경우에만)
 
 disable_finger() {
-    log_info "disable_finger 시작"
-    if rpm -q finger &>/dev/null; then
-        systemctl disable --now finger &>/dev/null || log_error "disable_finger" "finger 비활성화 실패"
-        rm -f /etc/xinetd.d/finger 2>/dev/null
-        sed -i '/finger/d' /etc/inetd.conf 2>/dev/null
-        log_info "finger 비활성화"
-        SERVICES_DISABLED+="finger "
-    else
-        log_info "finger 미설치"
-    fi
+  rpm -q finger >/dev/null 2>&1 && systemctl disable --now finger || true
+}
+
+disable_anonymous_ftp() {
+  if rpm -q vsftpd >/dev/null 2>&1; then
+    [ -f /etc/vsftpd/vsftpd.conf ] && sed -i 's/^anonymous_enable=.*/anonymous_enable=NO/' /etc/vsftpd/vsftpd.conf || true
+    systemctl restart vsftpd >/dev/null 2>&1 || true
+  fi
 }
 
 disable_r_services() {
-    log_info "disable_r_services 시작"
-    for svc in rsh rlogin rexec; do
-        if rpm -q "$svc" &>/dev/null; then
-            systemctl disable --now "$svc" &>/dev/null || log_error "disable_r_services" "$svc 비활성화 실패"
-            rm -f /etc/xinetd.d/$svc 2>/dev/null
-            sed -i "/$svc/d" /etc/inetd.conf 2>/dev/null
-            log_info "$svc 비활성화"
-            SERVICES_DISABLED+="$svc "
-        else
-            log_info "$svc 미설치"
-        fi
-    done
-}
-
-disable_dos_services() {
-    log_info "disable_dos_services 시작"
-    for svc in echo discard daytime chargen; do
-        if [ -f /etc/xinetd.d/$svc ]; then
-            sed -i 's/disable *= *no/disable = yes/' /etc/xinetd.d/$svc
-            log_info "$svc 비활성화"
-            SERVICES_DISABLED+="$svc "
-        fi
-    done
-    systemctl restart xinetd &>/dev/null || log_error "disable_dos_services" "xinetd 재시작 실패"
-}
-
-remove_automountd() {
-    log_info "remove_automountd 시작"
-    if rpm -q autofs &>/dev/null; then
-        systemctl disable --now autofs &>/dev/null || log_error "remove_automountd" "autofs 비활성화 실패"
-        SERVICES_DISABLED+="autofs "
-        log_info "autofs 비활성화"
-    else
-        log_info "autofs 미설치"
-    fi
+  for svc in rsh rlogin rexec; do
+    rpm -q "$svc" >/dev/null 2>&1 && systemctl disable --now "$svc" || true
+  done
 }
 
 configure_cron_permissions() {
-    log_info "configure_cron_permissions 시작"
-    for f in /etc/cron.allow /etc/cron.deny; do
-        [ -e "$f" ] && backup_file "$f" && set_file_perms "$f" root:root 640
-    done
-    log_info "cron 권한 설정 완료"
+  for f in /etc/cron.allow /etc/cron.deny /etc/at.allow /etc/at.deny; do
+    [ -e "$f" ] || touch "$f"
+    set_file_perms "$f" root:root 640
+  done
 }
 
-disable_rhosts_hosts_equiv() {
-    log_info "disable_rhosts_hosts_equiv 시작"
-    backup_file /etc/hosts.equiv "$HOME/.rhosts"
-    rm -f /etc/hosts.equiv "$HOME/.rhosts"
-    log_info "rhosts/hosts.equiv 제거 완료"
+disable_dos_services() {
+  for svc in echo discard daytime chargen; do
+    if [ -f "/etc/xinetd.d/$svc" ]; then
+      sed -i 's/disable *= *no/disable = yes/' "/etc/xinetd.d/$svc" || true
+    fi
+  done
+  systemctl restart xinetd >/dev/null 2>&1 || true
+}
+
+remove_automountd() {
+  rpm -q autofs >/dev/null 2>&1 && systemctl disable --now autofs || true
+}
+
+disable_nis() {
+  local services=(ypbind ypserv ypxfrd rpc.yppasswdd rpc.ypupdated)
+  for svc in "${services[@]}"; do
+    rpm -q "$svc" >/dev/null 2>&1 && systemctl disable --now "$svc" || true
+  done
+}
+
+configure_ftp_shell() {
+  # ftp 계정 shell 제한 (존재 시)
+  if getent passwd ftp >/dev/null 2>&1; then
+    sed -i '/^ftp:/s#/sbin/nologin#/bin/false#' /etc/passwd || true
+  fi
+}
+
+disable_tftp_talk() {
+  for svc in tftp talk; do
+    rpm -q "$svc" >/dev/null 2>&1 && systemctl disable --now "$svc" || true
+  done
+}
+
+configure_smtp_security() {
+  # postfix 설치된 경우에만 적용
+  if rpm -q postfix >/dev/null 2>&1; then
+    if ! grep -qE '^disable_vrfy_command\s*=\s*yes' /etc/postfix/main.cf 2>/dev/null; then
+      if grep -q '^disable_vrfy_command' /etc/postfix/main.cf 2>/dev/null; then
+        sed -i 's/^disable_vrfy_command.*/disable_vrfy_command = yes/' /etc/postfix/main.cf || true
+      else
+        echo "disable_vrfy_command = yes" >> /etc/postfix/main.cf || true
+      fi
+    fi
+    postconf -e "inet_protocols = ipv4" || true
+    postconf -e "inet_interfaces = 127.0.0.1" || true
+    systemctl reload postfix >/dev/null 2>&1 || systemctl restart postfix >/dev/null 2>&1 || true
+  fi
 }
 
 # 실행
 disable_finger
+disable_anonymous_ftp
 disable_r_services
+configure_cron_permissions
 disable_dos_services
 remove_automountd
-configure_cron_permissions
-disable_rhosts_hosts_equiv
+disable_nis
+configure_ftp_shell
+disable_tftp_talk
+configure_smtp_security

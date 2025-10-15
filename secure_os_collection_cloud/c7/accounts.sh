@@ -1,37 +1,29 @@
 #!/bin/bash
-# c7/accounts.sh : 계정 관련
-# 제거: root 로그인 차단, 패스워드 만료 정책, 계정 잠금 임계값
+set -euo pipefail
 
-source /usr/local/src/secure_os_collection/c7/common.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
+# [제거됨]
+# - root 원격접속 차단(PermitRootLogin no) 미적용
+# - SSH 포트 변경/검증 전체 제거
+# - 패스워드 만료 정책(chage, login.defs) 제거
+# - 계정 잠금 임계값(PAM tally/FAILLock) 제거
+# - /etc/pwquality.conf 유지 여부는 '현상 유지' 원칙으로 미변경(생성/수정 안 함)
 
 remove_unneeded_users() {
-    log_info "remove_unneeded_users 시작"
-    for u in lp games ftp sync shutdown halt; do
-        if id "$u" &>/dev/null; then
-            userdel -r "$u" && { log_info "$u 삭제"; DELETED_USERS+="$u "; } || log_error "remove_unneeded_users" "$u 삭제 실패"
-        else
-            log_info "$u 없음"
-        fi
-    done
+  # 존재 시만 제거 (현상 유지)
+  local users=(lp games sync shutdown halt)
+  for u in "${users[@]}"; do
+    id "$u" >/dev/null 2>&1 && userdel -r "$u" || true
+  done
 }
 
-# 유지: ftp 계정 쉘 제한(보안상 권장) – 시스템 정책 유지
-configure_ftp_shell() {
-    log_info "configure_ftp_shell 시작"
-    backup_file /etc/passwd
-    if getent passwd ftp >/dev/null; then
-        if ! getent passwd ftp | grep -qE '(/bin/false|/sbin/nologin)'; then
-            sed -i '/^ftp:/s#\([^:]*:\)\{6\}[^:]*#\1/bin/false#' /etc/passwd \
-                || { log_error "configure_ftp_shell" "/etc/passwd 수정 실패"; return 1; }
-            log_info "ftp 계정 셸 제한(/bin/false)"
-        else
-            log_info "ftp 계정 셸 이미 제한"
-        fi
-    else
-        log_info "ftp 계정 없음"
-    fi
-}
+# root 비밀번호 변경(옵션) — 사용자 입력 없애고 '미수행'
+# 필요 시 별도 명령으로 진행하도록 본 모듈에서는 수행하지 않음.
+
+# 관리자 대체 계정 생성 절차는 사용자 입력이 필요하므로 본 모듈에서는 미수행.
+# (현상 유지: 자동 생성/권한변경/SSH 설정 변경 없음)
 
 # 실행
 remove_unneeded_users
-configure_ftp_shell
