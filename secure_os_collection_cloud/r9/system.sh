@@ -59,7 +59,6 @@ configure_sysctl() {
     log_info "configure_sysctl 시작"
     # 내부 표준 최소값(IPv6 off 등) - 필요 시 조정
     cat <<'EOF' > /etc/sysctl.conf
-net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv4.icmp_echo_ignore_broadcasts = 1
 net.ipv4.tcp_rmem = 4096 10000000 16777216
 net.ipv4.tcp_wmem = 4096 65536 16777216
