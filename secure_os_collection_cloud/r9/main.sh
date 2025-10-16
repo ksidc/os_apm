@@ -23,9 +23,9 @@ source "$BASE_DIR/accounts.sh"
 log_info "services.sh 실행"
 source "$BASE_DIR/services.sh"
 
-log_info "dnf update 시작"
-dnf -y update || log_error "main" "dnf update 실패(무시되지 않음)"
-log_info "dnf update 완료"
+# log_info "dnf update 시작"
+# dnf -y update || log_error "main" "dnf update 실패(무시되지 않음)"
+# log_info "dnf update 완료"
 
 
 # log_info "자동 리부팅 수행"
