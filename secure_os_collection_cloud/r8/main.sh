@@ -28,11 +28,11 @@ dnf -y update || log_error "main" "dnf update 실패(무시되지 않음)"
 log_info "dnf update 완료"
 
 
-log_info "자동 리부팅 수행"
-if command -v systemctl >/dev/null 2>&1; then
-  systemctl reboot
-else
-  /sbin/shutdown -r now || /usr/sbin/reboot
-fi
+# log_info "자동 리부팅 수행"
+# if command -v systemctl >/dev/null 2>&1; then
+#   systemctl reboot
+# else
+#   /sbin/shutdown -r now || /usr/sbin/reboot
+# fi
 
 exit 0
