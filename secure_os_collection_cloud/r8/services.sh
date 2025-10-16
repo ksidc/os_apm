@@ -105,10 +105,14 @@ configure_cron_permissions() {
 }
 
 disable_rhosts_hosts_equiv() {
-    log_info "disable_rhosts_hosts_equiv 시작"
-    backup_file /etc/hosts.equiv "$HOME/.rhosts"
-    rm -f /etc/hosts.equiv "$HOME/.rhosts"
-    log_info "rhosts 및 hosts.equiv 제거 완료"
+    log_info "disable_rhosts_hosts_equiv ???"
+    local home_dir="${HOME:-/root}"
+    if [ -z "${HOME:-}" ]; then
+        log_info "HOME not set; defaulting to /root"
+    fi
+    backup_file /etc/hosts.equiv "$home_dir/.rhosts"
+    rm -f /etc/hosts.equiv "$home_dir/.rhosts"
+    log_info "rhosts ??hosts.equiv ??? ???"
 }
 
 # 서비스 비활성화 실행
