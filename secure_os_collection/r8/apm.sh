@@ -26,16 +26,8 @@ yes|y|Y|YES)
     # VirtualHost 설정 (conf.d 별도 파일로 추가)
     IPaddress=$(hostname -I | awk '{print $1}')
     mkdir -p /home/iteasy
-
-    cat <<EOF >> /etc/httpd/conf/httpd.conf
-<Directory "/home/iteasy">
- AllowOverride None
- # Allow open access:
- Require all granted
-</Directory>
-EOF
-chmod 755 /home/iteasy
-
+    chown -R nobody:nobody /home/iteasy
+    chmod 755 /home/iteasy
     cat <<EOF > /etc/httpd/conf.d/vhost.conf
 <VirtualHost *:80>
     DocumentRoot /home/iteasy
@@ -43,6 +35,11 @@ chmod 755 /home/iteasy
     ErrorLog logs/${IPaddress:-localhost}-error_log
     CustomLog logs/${IPaddress:-localhost}-access_log common
 </VirtualHost>
+<Directory "/home/iteasy">
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
 EOF
 
     # Prefork MPM 튜닝
@@ -135,6 +132,21 @@ EOF
     sed -i 's/Addr=127.0.0.1/Addr=0.0.0.0/g' /etc/mail/sendmail.mc
     m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
     systemctl enable --now sendmail
+
+    cat <<'EOF' > /etc/cron.daily/backup.sh
+#!/bin/bash
+##### Today #####
+## 오늘 날짜
+DATE=$(/bin/date +%Y%m%d)
+OLD_DATE=$(date -d "-3 days" +%Y%m%d)
+echo "$DATE"
+echo "$OLD_DATE"
+rm -rf "/data/backup/${OLD_DATE}"
+mkdir -p "/data/backup/${DATE}"
+rsync -avogh /var/lib/mysq* "/data/backup/${DATE}"
+rsync -avogh /home/* "/data/backup/${DATE}"
+EOF
+    chmod 755 /etc/cron.daily/backup.sh
 
     log_info "=== APM 설치 및 연동 완료 ==="
     ;;
