@@ -71,6 +71,8 @@ detect_os() {
                 OS_SUBDIR="r8"
             elif [ "$MAJOR_VER" = "9" ]; then
                 OS_SUBDIR="r9"
+            elif [ "$MAJOR_VER" = "10" ]; then
+                OS_SUBDIR="r10"
             else
                 log "ERROR: Rocky $OS_VER 미지원."
                 exit 1
