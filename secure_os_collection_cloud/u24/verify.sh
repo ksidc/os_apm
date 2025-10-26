@@ -46,9 +46,9 @@ check_packages() {
         dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
     done
     if [ "${#missing[@]}" -eq 0 ]; then
-        pass "?�수 ?�키지가 ?�치?�어 ?�습?�다."
+        pass "필수 패키지가 설치되어 있습니다."
     else
-        fail "?�치?��? ?��? ?�키지: ${missing[*]}"
+        fail "설치되지 않은 패키지: ${missing[*]}"
     fi
 }
 
@@ -60,9 +60,9 @@ check_removed_users() {
         id "$u" >/dev/null 2>&1 && remaining+=("$u")
     done
     if [ "${#remaining[@]}" -eq 0 ]; then
-        pass "불필??계정???�거?�었?�니??"
+        pass "불필요 계정이 제거되었습니다."
     else
-        fail "?�음 계정???�아 ?�습?�다: ${remaining[*]}"
+        fail "다음 계정이 남아 있습니다: ${remaining[*]}"
     fi
 }
 
@@ -71,31 +71,31 @@ check_ftp_shell() {
         local shell
         shell=$(getent passwd ftp | cut -d: -f7)
         case "$shell" in
-            /usr/sbin/nologin|/usr/bin/nologin) pass "ftp 계정 ?�이 nologin?�니??" ;;
-            *) fail "ftp 계정 ?�이 nologin???�닙?�다: $shell" ;;
+            /usr/sbin/nologin|/usr/bin/nologin) pass "ftp 계정 쉘이 nologin입니다." ;;
+            *) fail "ftp 계정 쉘이 nologin이 아닙니다: $shell" ;;
         esac
     else
-        pass "ftp 계정??존재?��? ?�습?�다."
+        pass "ftp 계정이 존재하지 않습니다."
     fi
 }
 
 check_finger() {
     if dpkg -s finger >/dev/null 2>&1; then
-        service_disabled_or_missing finger && pass "finger ?�비?��? 비활?�화?�었?�니??" || fail "finger ?�비?��? ?�성 ?�태?�니??"
+        service_disabled_or_missing finger && pass "finger 서비스가 비활성화되었습니다." || fail "finger 서비스가 활성 상태입니다."
     else
-        pass "finger ?�키지가 ?�치?�어 ?��? ?�습?�다."
+        pass "finger 패키지가 설치되어 있지 않습니다."
     fi
 }
 
 check_vsftpd() {
     if dpkg -s vsftpd >/dev/null 2>&1 && [ -f /etc/vsftpd.conf ]; then
         if grep -Fxq 'anonymous_enable=NO' /etc/vsftpd.conf; then
-            pass "vsftpd ?�명 ?�속??차단?�었?�니??"
+            pass "vsftpd 익명 접속이 차단되었습니다."
         else
-            fail "/etc/vsftpd.conf?�서 anonymous_enable=NO ??��??찾�? 못했?�니??"
+            fail "/etc/vsftpd.conf에서 anonymous_enable=NO 항목을 찾지 못했습니다."
         fi
     else
-        pass "vsftpd가 ?�치?�어 ?��? ?�거???�정 ?�일???�습?�다."
+        pass "vsftpd가 설치되어 있지 않아 별도 설정이 없습니다."
     fi
 }
 
@@ -109,9 +109,9 @@ check_r_services() {
         fi
     done
     if [ "${#active[@]}" -eq 0 ]; then
-        pass "r 계열 ?�비?��? 비활?�화?�었?�니??"
+        pass "r 계열 서비스가 비활성화되었습니다."
     else
-        fail "?�음 r 계열 ?�비?��? ?�성 ?�태?�니?? ${active[*]}"
+        fail "다음 r 계열 서비스가 활성 상태입니다: ${active[*]}"
     fi
 }
 
@@ -126,17 +126,17 @@ check_cron_permissions() {
         fi
     done
     if [ "${#bad[@]}" -eq 0 ]; then
-        pass "cron/at ?�근 ?�어 ?�일 권한???�절?�니??"
+        pass "cron/at 접근 제어 파일 권한이 적절합니다."
     else
-        fail "?�음 ?�일 권한???�상�??�릅?�다: ${bad[*]}"
+        fail "다음 파일 권한을 확인하세요: ${bad[*]}"
     fi
 }
 
 check_autofs() {
     if dpkg -s autofs >/dev/null 2>&1; then
-        service_disabled_or_missing autofs && pass "autofs ?�비?��? 비활?�화?�었?�니??" || fail "autofs ?�비?��? ?�성 ?�태?�니??"
+        service_disabled_or_missing autofs && pass "autofs 서비스가 비활성화되었습니다." || fail "autofs 서비스가 활성 상태입니다."
     else
-        pass "autofs ?�키지가 ?�치?�어 ?��? ?�습?�다."
+        pass "autofs 패키지가 설치되어 있지 않습니다."
     fi
 }
 
@@ -150,9 +150,9 @@ check_nis() {
         fi
     done
     if [ "${#active[@]}" -eq 0 ]; then
-        pass "NIS 관???�비?��? 비활?�화?�었?�니??"
+        pass "NIS 관련 서비스가 비활성화되었습니다."
     else
-        fail "?�음 NIS ?�비?��? ?�성 ?�태?�니?? ${active[*]}"
+        fail "다음 NIS 서비스가 활성 상태입니다: ${active[*]}"
     fi
 }
 
@@ -166,9 +166,9 @@ check_tftp_talk() {
         fi
     done
     if [ "${#active[@]}" -eq 0 ]; then
-        pass "tftp/talk 관???�비?��? 비활?�화?�었?�니??"
+        pass "tftp/talk 관련 서비스가 비활성화되었습니다."
     else
-        fail "?�음 ?�비?��? ?�성 ?�태?�니?? ${active[*]}"
+        fail "다음 서비스가 활성 상태입니다: ${active[*]}"
     fi
 }
 
@@ -186,13 +186,13 @@ check_core_permissions() {
             info=$(stat -c '%a:%U:%G' "$file")
             [ "$info" = "$mode:$owner:$group" ] || bad+=("$file -> $info")
         else
-            bad+=("$file ?�음")
+            bad+=("$file 없음")
         fi
     done
     if [ "${#bad[@]}" -eq 0 ]; then
-        pass "/etc/passwd, /etc/shadow, /etc/hosts 권한???�바릅니??"
+        pass "/etc/passwd, /etc/shadow, /etc/hosts 권한이 올바릅니다."
     else
-        fail "?�음 ?�심 ?�일 권한???�인?�세?? ${bad[*]}"
+        fail "다음 핵심 파일 권한을 확인하세요: ${bad[*]}"
     fi
 }
 
@@ -208,15 +208,15 @@ check_privileged_binaries() {
         fi
     done
     if [ "${#bad[@]}" -eq 0 ]; then
-        pass "주요 ?�행 ?�일 권한???�한?�었?�니??"
+        pass "주요 실행 파일 권한이 제한되었습니다."
     else
-        fail "?�음 ?�행 ?�일 권한???�인?�세?? ${bad[*]}"
+        fail "다음 실행 파일 권한을 확인하세요: ${bad[*]}"
     fi
 }
 
 check_motd() {
     if [ ! -f /etc/motd ]; then
-        fail "/etc/motd ?�일??존재?��? ?�습?�다."
+        fail "/etc/motd 파일이 존재하지 않습니다."
         return
     fi
     local tmp
@@ -228,16 +228,16 @@ check_motd() {
 ********************************************************************
 EOF
     if cmp -s /etc/motd "$tmp"; then
-        pass "/etc/motd 배너가 ?�용?�었?�니??"
+        pass "/etc/motd 배너가 적용되었습니다."
     else
-        fail "/etc/motd ?�용???�상�??�릅?�다."
+        fail "/etc/motd 내용이 예상과 다릅니다."
     fi
     rm -f "$tmp"
 }
 
 check_sysctl() {
     if [ ! -f /etc/sysctl.conf ]; then
-        fail "/etc/sysctl.conf ?�일??존재?��? ?�습?�다."
+        fail "/etc/sysctl.conf 파일이 존재하지 않습니다."
         return
     fi
     local entries=(
@@ -260,15 +260,15 @@ check_sysctl() {
         grep -Fxq "$entry" /etc/sysctl.conf || missing+=("$entry")
     done
     if [ "${#missing[@]}" -eq 0 ]; then
-        pass "sysctl.conf 값이 ?�용?�었?�니??"
+        pass "sysctl.conf 값이 적용되었습니다."
     else
-        fail "?�음 sysctl ??��???�인?�세?? ${missing[*]}"
+        fail "다음 sysctl 항목을 확인하세요: ${missing[*]}"
     fi
 }
 
 check_limits() {
     if [ ! -f /etc/security/limits.conf ]; then
-        fail "/etc/security/limits.conf ?�일??존재?��? ?�습?�다."
+        fail "/etc/security/limits.conf 파일이 존재하지 않습니다."
         return
     fi
     local tmp
@@ -280,9 +280,9 @@ check_limits() {
 * hard nproc 61200
 EOF
     if cmp -s /etc/security/limits.conf "$tmp"; then
-        pass "limits.conf ?�정???�용?�었?�니??"
+        pass "limits.conf 설정이 적용되었습니다."
     else
-        fail "/etc/security/limits.conf ?�용???�상�??�릅?�다."
+        fail "/etc/security/limits.conf 내용이 예상과 다릅니다."
     fi
     rm -f "$tmp"
 }
@@ -304,23 +304,21 @@ check_sysctl
 check_limits
 
 if [ "${#fails[@]}" -eq 0 ]; then
-    printf '모든 검�???��???�과?�습?�다.\n'
+    printf '모든 검증을 통과했습니다.\n'
     for msg in "${passes[@]}"; do
         printf ' - %s\n' "$msg"
     done
     exit 0
 else
-    printf '검�?�??�인???�요????��???�습?�다.\n'
+    printf '검증 확인이 필요합니다.\n'
     for msg in "${fails[@]}"; do
-        printf ' [?�패] %s\n' "$msg"
+        printf ' [실패] %s\n' "$msg"
     done
     if [ "${#passes[@]}" -gt 0 ]; then
-        printf '?�과????��:\n'
+        printf '통과 항목:\n'
         for msg in "${passes[@]}"; do
-            printf ' [?�과] %s\n' "$msg"
+            printf ' [통과] %s\n' "$msg"
         done
     fi
     exit 1
 fi
-
-
