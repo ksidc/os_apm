@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 set -euo pipefail
 
@@ -46,9 +46,9 @@ check_packages() {
         dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
     done
     if [ "${#missing[@]}" -eq 0 ]; then
-        pass "필수 패키지가 설치되어 있습니다."
+        pass "필수 패키지가 모두 설치되어 있습니다."
     else
-        fail "다음 패키지가 설치되어 있지 않습니다: ${missing[*]}"
+        fail "설치되지 않은 패키지: ${missing[*]}"
     fi
 }
 
@@ -62,7 +62,7 @@ check_removed_users() {
     if [ "${#remaining[@]}" -eq 0 ]; then
         pass "불필요 계정이 제거되었습니다."
     else
-        fail "남아 있는 계정: ${remaining[*]}"
+        fail "다음 계정이 남아 있습니다: ${remaining[*]}"
     fi
 }
 
@@ -95,7 +95,7 @@ check_vsftpd() {
             fail "/etc/vsftpd.conf에서 anonymous_enable=NO 항목을 찾지 못했습니다."
         fi
     else
-        pass "vsftpd가 설치되어 있지 않아 별도 설정이 필요 없습니다."
+        pass "vsftpd가 설치되어 있지 않아 추가 설정이 필요 없습니다."
     fi
 }
 
