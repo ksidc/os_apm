@@ -60,8 +60,18 @@ EOF
     sysctl -p >/dev/null 2>&1 || true
 }
 
+configure_limits() {
+    cat <<'EOF' > /etc/security/limits.conf
+* soft nofile 61200
+* hard nofile 61200
+* soft nproc 61200
+* hard nproc 61200
+EOF
+}
+
 install_packages
 configure_etc_perms
 configure_file_permissions
 configure_motd
 configure_sysctl
+configure_limits
