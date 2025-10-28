@@ -129,7 +129,6 @@ interactive_timeout = 28800
 
 innodb_buffer_pool_size = ${INNODB_BUFFER_POOL_SIZE}
 innodb_buffer_pool_instances = ${INNODB_BUFFER_POOL_INSTANCES}
-innodb_log_file_size = 256M
 innodb_log_buffer_size = ${INNODB_LOG_BUFFER_SIZE}
 innodb_flush_log_at_trx_commit = 2
 innodb_flush_method = O_DIRECT
