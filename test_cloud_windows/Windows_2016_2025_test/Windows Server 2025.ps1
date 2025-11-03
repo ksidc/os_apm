@@ -683,7 +683,7 @@ try {
     # 정책 적용
     secedit /configure /db $dbPath /cfg $cfgPath /areas USER_RIGHTS | Out-Null
 
-    #Remove-Item $cfgPath,$dbPath -Force
+    Remove-Item $cfgPath,$dbPath -Force
     Write-OK "W-53: 로컬 로그온 허용을 Administrators, IIS_IUSRS로 제한함"
 }
 catch {
@@ -715,3 +715,4 @@ $warningMsg = @"
 Write-Warn $warningMsg          # 노란색 경고 출력
 
 Write-Info ""                  # 빈 줄 (일관된 출력 함수 사용)
+
