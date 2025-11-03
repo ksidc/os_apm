@@ -65,5 +65,6 @@ if %PS_ERR% NEQ 0 (
 echo [안내] 보안 설정 적용이 완료되었습니다. (실행정책: %OLDPOLICY% 로 복원)
 echo 재부팅이 필요한 항목이 포함되어 있습니다.
 
-#exit /b 0
+exit /b 0
+
 
