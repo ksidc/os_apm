@@ -4,6 +4,14 @@ chcp 65001>nul & setlocal enabledelayedexpansion
 ::  Windows Server 보안 설정 자동화 배치
 :: ──────────────────────────────────────────
 
+:: 관리자 권한 체크 및 재실행
+net session >nul 2>&1
+if %errorlevel% NEQ 0 (
+    echo 관리자 권한으로 다시 실행 중...
+    powershell start-process "%~f0" -verb runas
+    exit /b
+)
+
 :: 현재 BAT 위치로 이동
 cd /d "%~dp0"
 
@@ -66,3 +74,4 @@ echo [안내] 보안 설정 적용이 완료되었습니다. (실행정책: %OLD
 echo 재부팅이 필요한 항목이 포함되어 있습니다.
 
 exit /b 0
+
