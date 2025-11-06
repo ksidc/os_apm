@@ -4,6 +4,9 @@ chcp 65001>nul & setlocal enabledelayedexpansion
 ::  Windows Server 보안 설정 자동화 배치
 :: ──────────────────────────────────────────
 
+:: 현재 BAT 위치로 이동
+cd /d "%~dp0"
+
 :: PowerShell 스크립트 실행 (정책 변경 없이 Bypass 사용)
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windows Server 2025.ps1"
 set "PS_ERR=%errorlevel%"
@@ -28,5 +31,6 @@ echo [안내] 보안 설정 적용이 완료되었습니다. (실행정책: %OLD
 echo 재부팅이 필요한 항목이 포함되어 있습니다.
 
 exit /b 0
+
 
 
