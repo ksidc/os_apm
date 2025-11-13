@@ -45,7 +45,6 @@ net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv4.icmp_echo_ignore_broadcasts = 1
 net.ipv4.tcp_rmem = 4096 10000000 16777216
 net.ipv4.tcp_wmem = 4096 65536 16777216
-net.ipv4.tcp_tw_reuse = 1
 net.ipv4.tcp_fin_timeout = 10
 net.ipv4.tcp_keepalive_time = 1800
 net.ipv4.tcp_max_syn_backlog = 4096
