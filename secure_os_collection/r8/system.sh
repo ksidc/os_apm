@@ -93,6 +93,7 @@ configure_motd() {
 * evidence of criminal activity, system personnel may provide the  *
 * evidence from such monitoring to law enforcement officials.      *
 *                                                                  *
+* Apply version 251203                                             *
 ********************************************************************
 EOF
     log_info "motd 설정 완료"
