@@ -163,10 +163,19 @@ configure_motd() {
   backup_file /etc/motd
   cat <<'EOF' > /etc/motd
 ********************************************************************
-* 이 시스템은 허가된 사용자만 사용할 수 있습니다.                 *
-* 무단 접근 및 정보 유출 시 관련 법령에 따라 처벌될 수 있습니다. *
 *                                                                  *
-* Apply version 251203                                             *
+*  이 시스템은 허가된 사용자만 사용할 수 있습니다.              *
+*  무단 접근 및 정보 탈취/변조 행위는 관련 법령에 따라 처벌됩니다. *
+*                                                                  *
+*  This system is for the use of authorized users only.  Usage of   *
+*  this system may be monitored and recorded by system personnel.   *
+*                                                                  *
+*  Anyone using this system expressly consents to such monitoring   *
+*  and is advised that if such monitoring reveals possible          *
+*  evidence of criminal activity, system personnel may provide the  *
+*  evidence from such monitoring to law enforcement officials.      *
+*                                                                  *
+*  Apply version 251203                                            *
 ********************************************************************
 EOF
 }
