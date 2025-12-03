@@ -35,6 +35,8 @@ configure_motd() {
 ********************************************************************
 * This system is for authorized users only.                        *
 * Unauthorized access or misuse will be prosecuted.                *
+*                                                                  *
+* Apply version 2025                                               *
 ********************************************************************
 EOF
 }
