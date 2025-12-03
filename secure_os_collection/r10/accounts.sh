@@ -176,6 +176,8 @@ create_fallback_and_restrict() {
         log_error "restrict_root" "sshd_config 수정 실패"
         return 1
     }
+
+    # Rocky 10 기본 이미지에서 drop-in(01-permitrootlogin.conf)에 PermitRootLogin yes가 남을 수 있어 no로 덮어쓴다.
     log_info "root 원격 로그인 차단 적용"
     local dropin_dir="/etc/ssh/sshd_config.d"
     local dropin_file="${dropin_dir}/01-permitrootlogin.conf"
@@ -184,7 +186,7 @@ create_fallback_and_restrict() {
         cat <<'EOF' > "$dropin_file"
 PermitRootLogin no
 EOF
-        log_info "drop-in 설정(${dropin_file}) 갱신 완료"
+        log_info "sshd drop-in(${dropin_file})에 PermitRootLogin no 적용"
     else
         log_error "restrict_root" "sshd_config.d 디렉터리 생성 실패"
         return 1
