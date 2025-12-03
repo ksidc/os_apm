@@ -153,6 +153,21 @@ create_fallback_and_restrict() {
     log_info "root 원격 로그인 제한 적용"
     restarts_needed["sshd"]=1
 
+    # Rocky 9.6 기본 이미지에는 /etc/ssh/sshd_config.d/01-permitrootlogin.conf 에 PermitRootLogin yes 가 남아 있을 수 있다.
+    # drop-in을 no로 재작성하여 root 원격 로그인을 확실히 차단한다.
+    local dropin_dir="/etc/ssh/sshd_config.d"
+    local dropin_file="$dropin_dir/01-permitrootlogin.conf"
+    if mkdir -p "$dropin_dir"; then
+        [ -f "$dropin_file" ] && backup_file "$dropin_file"
+        cat <<'EOF' > "$dropin_file"
+PermitRootLogin no
+EOF
+        log_info "sshd drop-in (${dropin_file})에 PermitRootLogin no 적용"
+    else
+        log_error "restrict_root" "sshd_config.d 디렉터리 생성 실패"
+        return 1
+    fi
+
     {
         echo ">>> 계정 $UserName 상태:"; passwd -S "$UserName"
         echo ">>> 계정 $UserName 그룹:"; groups "$UserName"
