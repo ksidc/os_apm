@@ -129,7 +129,7 @@ configure_motd() {
 * This system is for the use of authorized users only. Usage may   *
 * be monitored and disclosed to law enforcement if abuse is found. *
 *                                                                  *
-* Apply version 251203                                                                  *
+* Apply version 251203                                             *
 ********************************************************************
 EOF
 }
