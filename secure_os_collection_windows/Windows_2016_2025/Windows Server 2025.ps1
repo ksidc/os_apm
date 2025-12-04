@@ -1,86 +1,86 @@
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 0. ì‚¬ìš©ìž ì¡°ì • íŒŒë¼ë¯¸í„°
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-$NewAdminName   = 'iteasy_admin'                   # W?01 administrartor ê³„ì • ë³€ê²½ ë  ì´ë¦„
-$Lockout        = @{Threshold = 5; Duration = 60; Window = 60}   # W?04, W?47 íŒ¨ìŠ¤ì›Œë“œ 5íšŒ ì‹¤íŒ¨ì‹œ 60ë¶„ ìž ê¸ˆ
-$AccountWhite   = @($NewAdminName,'Guest','WDAGUtilityAccount','DefaultAccount') # W?03 í•­ëª©ì—ì„œ ì‚­ì œ í•˜ì§€ ì•Šì„ ê³„ì •
-$BlockServices  = @('SNMP','SNMPTRAP','Telnet','Fax','TlntSvr','TrkWks','TrkSvr','Spooler') # W?09 + W?60/63/65 í•­ëª©ì—ì„œ ë¹„í™œì„±í™”ë  ì„œë¹„ìŠ¤
-$ExtraBlockSvc  = @('DNS')   # W?09 + W?60/63/65 DNS ì„œë²„ë‚˜ ë„ë©”ì¸ ì»¨íŠ¸ë¡¤ëŸ¬ ì‚¬ìš© í•  ê²½ìš° ì œì™¸
-$NeedReboot     = $false     # ìž¬ë¶€íŒ… í”Œëž˜ê·¸
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 0. »ç¿ëÀÚ Á¶Á¤ ÆÄ¶ó¹ÌÅÍ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+$NewAdminName   = 'iteasy_admin'                   # W?01 administrartor °èÁ¤ º¯°æ µÉ ÀÌ¸§
+$Lockout        = @{Threshold = 5; Duration = 60; Window = 60}   # W?04, W?47 ÆÐ½º¿öµå 5È¸ ½ÇÆÐ½Ã 60ºÐ Àá±Ý
+$AccountWhite   = @($NewAdminName,'Guest','WDAGUtilityAccount','DefaultAccount') # W?03 Ç×¸ñ¿¡¼­ »èÁ¦ ÇÏÁö ¾ÊÀ» °èÁ¤
+$BlockServices  = @('SNMP','SNMPTRAP','Telnet','Fax','TlntSvr','TrkWks','TrkSvr','Spooler') # W?09 + W?60/63/65 Ç×¸ñ¿¡¼­ ºñÈ°¼ºÈ­µÉ ¼­ºñ½º
+$ExtraBlockSvc  = @('DNS')   # W?09 + W?60/63/65 DNS ¼­¹ö³ª µµ¸ÞÀÎ ÄÁÆ®·Ñ·¯ »ç¿ë ÇÒ °æ¿ì Á¦¿Ü
+$NeedReboot     = $false     # ÀçºÎÆÃ ÇÃ·¡±×
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 1. ê³µí†µ ì¶œë ¥ í•¨ìˆ˜
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 1. °øÅë Ãâ·Â ÇÔ¼ö
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 function Write-Info { param([string]$m) Write-Host $m -ForegroundColor Cyan    }
 function Write-OK   { param([string]$m) Write-Host $m -ForegroundColor Green   }
 function Write-Warn { param([string]$m) Write-Host $m -ForegroundColor Yellow  }
 function Write-Err  { param([string]$m) Write-Host $m -ForegroundColor Red     }
 function Need-Reboot{ $script:NeedReboot = $true }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 2. ì‹œìž‘
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-Write-Info "`n===== Windows?Server ë³´ì•ˆ ì„¤ì • ì‹œìž‘ ====="
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 2. ½ÃÀÛ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+Write-Info "`n===== Windows?Server º¸¾È ¼³Á¤ ½ÃÀÛ ====="
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 3. W?01 Administrator ê³„ì • ì´ë¦„ ë³€ê²½
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 3. W?01 Administrator °èÁ¤ ÀÌ¸§ º¯°æ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $adminSID = (Get-CimInstance Win32_UserAccount | Where SID -like '*-500').SID
     $admin    = Get-LocalUser | Where SID -eq $adminSID
     if ($admin) {
         if ($admin.Name -ne $NewAdminName) {
             Rename-LocalUser -Name $admin.Name -NewName $NewAdminName
-            Write-OK  "W-01: Administrator â†’ $NewAdminName ë³€ê²½ ì™„ë£Œ"
-            Need-Reboot   # ì¼ë¶€ ì„œë¹„ìŠ¤ ìž¬ì‹œìž‘ í•„ìš”
+            Write-OK  "W-01: Administrator ¡æ $NewAdminName º¯°æ ¿Ï·á"
+            Need-Reboot   # ÀÏºÎ ¼­ºñ½º Àç½ÃÀÛ ÇÊ¿ä
         } else {
-            Write-Warn "W-01: ì´ë¯¸ $NewAdminName ìœ¼ë¡œ ë³€ê²½ë¨"
+            Write-Warn "W-01: ÀÌ¹Ì $NewAdminName À¸·Î º¯°æµÊ"
         }
-    } else { Write-Warn "W-01: ë¡œì»¬ Administrator ê³„ì •ì´ ì¡´ìž¬í•˜ì§€ ì•ŠìŒ" }
-} catch { Write-Err "W-01: ì‹¤íŒ¨ ? $_" }
+    } else { Write-Warn "W-01: ·ÎÄÃ Administrator °èÁ¤ÀÌ Á¸ÀçÇÏÁö ¾ÊÀ½" }
+} catch { Write-Err "W-01: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 4. W?02 Guest ê³„ì • ë¹„í™œì„±í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 4. W?02 Guest °èÁ¤ ºñÈ°¼ºÈ­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $guest = Get-LocalUser | Where SID -like '*-501'
     if ($guest -and $guest.Enabled) {
         Disable-LocalUser -Name $guest.Name
-        Write-OK "W-02: Guest ê³„ì • ë¹„í™œì„±í™” ì™„ë£Œ"
-    } else { Write-Warn "W-02: Guest ê³„ì • ì—†ìŒ/ì´ë¯¸ ë¹„í™œì„±í™”" }
-} catch { Write-Err "W-02: ì‹¤íŒ¨ ? $_" }
+        Write-OK "W-02: Guest °èÁ¤ ºñÈ°¼ºÈ­ ¿Ï·á"
+    } else { Write-Warn "W-02: Guest °èÁ¤ ¾øÀ½/ÀÌ¹Ì ºñÈ°¼ºÈ­" }
+} catch { Write-Err "W-02: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 5. W?03 ë¶ˆí•„ìš” ë¡œì»¬ ê³„ì • ë¹„í™œì„±í™” (í™”ì´íŠ¸ë¦¬ìŠ¤íŠ¸)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 5. W?03 ºÒÇÊ¿ä ·ÎÄÃ °èÁ¤ ºñÈ°¼ºÈ­ (È­ÀÌÆ®¸®½ºÆ®)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 foreach ($u in Get-LocalUser) {
     if ($AccountWhite -notcontains $u.Name) {
         try {
             Disable-LocalUser -Name $u.Name -ErrorAction Stop
-            Write-OK "W-03: [$($u.Name)] ë¹„í™œì„±í™”"
+            Write-OK "W-03: [$($u.Name)] ºñÈ°¼ºÈ­"
         } catch {
-            Write-Err "W-03: [$($u.Name)] ì‹¤íŒ¨ ? $_"
+            Write-Err "W-03: [$($u.Name)] ½ÇÆÐ ? $_"
         }
     }
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 6. W?04Â·47 ê³„ì • ìž ê¸ˆ ì •ì±… ì ìš©
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 6. W?04¡¤47 °èÁ¤ Àá±Ý Á¤Ã¥ Àû¿ë
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     net accounts /lockoutthreshold:$($Lockout.Threshold) `
                  /lockoutduration:$($Lockout.Duration) `
                  /lockoutwindow:$($Lockout.Window) | Out-Null
-    Write-OK "W-04/47: ê³„ì • ìž ê¸ˆ ìž„ê³„ê°’Â·ê¸°ê°„ ì„¤ì • ì™„ë£Œ ($($Lockout.Threshold)íšŒ / $($Lockout.Duration)ë¶„)"
-} catch { Write-Err "W-04/47: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-04/47: °èÁ¤ Àá±Ý ÀÓ°è°ª¡¤±â°£ ¼³Á¤ ¿Ï·á ($($Lockout.Threshold)È¸ / $($Lockout.Duration)ºÐ)"
+} catch { Write-Err "W-04/47: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 7. W?05 ê°€ì—­ì  ì•”í˜¸ ì €ìž¥ ê¸ˆì§€
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-Import-Module Microsoft.PowerShell.LocalAccounts   # í•„ìš” ì‹œ ëª¨ë“ˆ ë¡œë“œ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 7. W?05 °¡¿ªÀû ¾ÏÈ£ ÀúÀå ±ÝÁö
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+Import-Module Microsoft.PowerShell.LocalAccounts   # ÇÊ¿ä ½Ã ¸ðµâ ·Îµå
 
-$dom = (Get-CimInstance Win32_ComputerSystem -EA 0).PartOfDomain      # ë„ë©”ì¸ ì—¬ë¶€
-$builtin = Get-LocalUser | Where-Object { $_.SID -match '-500$' }     # ë‚´ìž¥ Admin í™•ì¸
+$dom = (Get-CimInstance Win32_ComputerSystem -EA 0).PartOfDomain      # µµ¸ÞÀÎ ¿©ºÎ
+$builtin = Get-LocalUser | Where-Object { $_.SID -match '-500$' }     # ³»Àå Admin È®ÀÎ
 if (-not $builtin) {
     Remove-LocalGroupMember Administrators "$env:COMPUTERNAME\Administrator" -EA 0
 }
@@ -92,23 +92,23 @@ try {
         Set-Content $cfg -Encoding Unicode
     secedit /configure /db secedit.sdb /cfg $cfg /areas SECURITYPOLICY | Out-Null
     Remove-Item $cfg -Force
-    Write-OK  "W-05: ê°€ì—­ì  ì•”í˜¸ ì €ìž¥ ê¸ˆì§€ ì ìš© ì™„ë£Œ"
+    Write-OK  "W-05: °¡¿ªÀû ¾ÏÈ£ ÀúÀå ±ÝÁö Àû¿ë ¿Ï·á"
 }
 catch {
-    Write-Err "W-05: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-05: ½ÇÆÐ ? $_"
 }
 
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 8. W-06 ê´€ë¦¬ìž ê·¸ë£¹ ì •ë¦¬
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# ìœ ì§€í•  ê³„ì •ì˜ SID ëª©ë¡
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 8. W-06 °ü¸®ÀÚ ±×·ì Á¤¸®
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# À¯ÁöÇÒ °èÁ¤ÀÇ SID ¸ñ·Ï
 $newAdminSid = (Get-LocalUser -Name $NewAdminName).SID.Value
 $systemSid   = 'S-1-5-18'    # NT AUTHORITY\SYSTEM
 $keepSids    = @($newAdminSid, $systemSid)
 
-# Administrators ê·¸ë£¹ ë©¤ë²„ ì¡°íšŒ ë° ì œê±°
+# Administrators ±×·ì ¸â¹ö Á¶È¸ ¹× Á¦°Å
 Get-LocalGroupMember -Group 'Administrators' |
 Where-Object {
     $_.ObjectClass -eq 'User' -and
@@ -116,23 +116,23 @@ Where-Object {
 } |
 ForEach-Object {
     try {
-        # SID ê¸°ë°˜ìœ¼ë¡œ ì œê±°
+        # SID ±â¹ÝÀ¸·Î Á¦°Å
         Remove-LocalGroupMember `
             -Group 'Administrators' `
             -Member $_.SID.Value `
             -ErrorAction Stop `
             -Confirm:$false
 
-        Write-OK "W-06: Administratorsì—ì„œ [$($_.Name)] ì œê±° ì™„ë£Œ"
+        Write-OK "W-06: Administrators¿¡¼­ [$($_.Name)] Á¦°Å ¿Ï·á"
     }
     catch {
-        Write-Err "W-06: [$($_.Name)] ì œê±° ì‹¤íŒ¨ ? $($_.Exception.Message)"
+        Write-Err "W-06: [$($_.Name)] Á¦°Å ½ÇÆÐ ? $($_.Exception.Message)"
     }
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 9. W-08 ê¸°ë³¸ ê³µìœ (C$, D$) ìžë™ìƒì„± í•´ì œ / SMBv1 ë¹„í™œì„±í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 9. W-08 ±âº» °øÀ¯(C$, D$) ÀÚµ¿»ý¼º ÇØÁ¦ / SMBv1 ºñÈ°¼ºÈ­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
 try {
     $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters'
@@ -143,48 +143,48 @@ try {
     Set-ItemProperty -Path $regPath -Name 'AutoShareServer' -Value 0 -Force
     Set-ItemProperty -Path $regPath -Name 'SMB1' -Value 0 -Type DWord -Force
 
-    Write-OK "W-08: ê¸°ë³¸ ê³µìœ  í•´ì œ ë° SMBv1 ë¹„í™œì„±í™” ì™„ë£Œ (ìž¬ë¶€íŒ… í›„ ì ìš©)"
+    Write-OK "W-08: ±âº» °øÀ¯ ÇØÁ¦ ¹× SMBv1 ºñÈ°¼ºÈ­ ¿Ï·á (ÀçºÎÆÃ ÈÄ Àû¿ë)"
     Need-Reboot
 } catch {
-    Write-Err "W-08: ê¸°ë³¸ ê³µìœ  í•´ì œ ë˜ëŠ” SMBv1 ì„¤ì • ì‹¤íŒ¨ ? $_"
+    Write-Err "W-08: ±âº» °øÀ¯ ÇØÁ¦ ¶Ç´Â SMBv1 ¼³Á¤ ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 10. W-09 + W-60/63/65 ë¶ˆí•„ìš” ì„œë¹„ìŠ¤ ë¹„í™œì„±í™” (ì„¤ì¹˜ ì•ˆ ëœ ì„œë¹„ìŠ¤ëŠ” ê±´ë„ˆëœ€)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 10. W-09 + W-60/63/65 ºÒÇÊ¿ä ¼­ºñ½º ºñÈ°¼ºÈ­ (¼³Ä¡ ¾È µÈ ¼­ºñ½º´Â °Ç³Ê¶Ü)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 $AllBlock = $BlockServices + $ExtraBlockSvc
 
 foreach ($svcName in $AllBlock) {
-    # ì„œë¹„ìŠ¤ ì¡°íšŒ (ì‹¤íŒ¨í•´ë„ ì—ëŸ¬ ì“°ë¡œìš° ì•ˆ í•¨)
+    # ¼­ºñ½º Á¶È¸ (½ÇÆÐÇØµµ ¿¡·¯ ¾²·Î¿ì ¾È ÇÔ)
     $svc = Get-Service -Name $svcName -ErrorAction SilentlyContinue
 
-    # ì„¤ì¹˜ ì•ˆ ëœ ì„œë¹„ìŠ¤ëŠ” ìŠ¤í‚µ
+    # ¼³Ä¡ ¾È µÈ ¼­ºñ½º´Â ½ºÅµ
     if (-not $svc) {
-        Write-Host "W-09/60/63/65: ì„œë¹„ìŠ¤ [$svcName] ì„¤ì¹˜ ì•ˆ ë¨, ê±´ë„ˆëœ€"
+        Write-Host "W-09/60/63/65: ¼­ºñ½º [$svcName] ¼³Ä¡ ¾È µÊ, °Ç³Ê¶Ü"
         continue
     }
 
     try {
-        # (1) ì‹¤í–‰ ì¤‘ì´ë©´ ì¤‘ì§€
+        # (1) ½ÇÇà ÁßÀÌ¸é ÁßÁö
         if ($svc.Status -ne 'Stopped') {
             Stop-Service -InputObject $svc -Force -ErrorAction SilentlyContinue
         }
 
-        # (2) ë¹„í™œì„±í™” (ê°ì²´ ì „ë‹¬ ì‹œ -InputObject ì‚¬ìš©)
+        # (2) ºñÈ°¼ºÈ­ (°´Ã¼ Àü´Þ ½Ã -InputObject »ç¿ë)
         Set-Service -InputObject $svc -StartupType Disabled -ErrorAction Stop
 
-        Write-OK "W-09/60/63/65: ì„œë¹„ìŠ¤ [$svcName] ì¤‘ì§€Â·ë¹„í™œì„±í™” ì™„ë£Œ"
+        Write-OK "W-09/60/63/65: ¼­ºñ½º [$svcName] ÁßÁö¡¤ºñÈ°¼ºÈ­ ¿Ï·á"
     }
     catch {
-        Write-Err "W-09/60/63/65: [$svcName] ì‹¤íŒ¨ ? $($_.Exception.Message)"
+        Write-Err "W-09/60/63/65: [$svcName] ½ÇÆÐ ? $($_.Exception.Message)"
     }
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 11. W-24 NetBIOS ë°”ì¸ë”© ì„¤ì • ì ê²€ ë° ê°•ì œ ë¹„í™œì„±í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 11. W-24 NetBIOS ¹ÙÀÎµù ¼³Á¤ Á¡°Ë ¹× °­Á¦ ºñÈ°¼ºÈ­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $base = 'HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces'
     $keys = Get-ChildItem -Path $base -ErrorAction Stop
@@ -193,88 +193,88 @@ try {
         try {
             $fullPath = Join-Path $base $key.PSChildName
             Set-ItemProperty -Path $fullPath -Name 'NetbiosOptions' -Value 2 -Type DWord -Force
-            Write-OK "W-24: [$($key.PSChildName)] NetbiosOptions = 2 (ë¹„í™œì„±í™”)"
+            Write-OK "W-24: [$($key.PSChildName)] NetbiosOptions = 2 (ºñÈ°¼ºÈ­)"
         } catch {
-            Write-Err "W-24: [$($key.PSChildName)] ì„¤ì • ì‹¤íŒ¨ ? $_"
+            Write-Err "W-24: [$($key.PSChildName)] ¼³Á¤ ½ÇÆÐ ? $_"
         }
     }
 } catch {
-    Write-Err "W-24: NetBIOS ì¸í„°íŽ˜ì´ìŠ¤ ë‚˜ì—´ ì‹¤íŒ¨ ? $_"
+    Write-Err "W-24: NetBIOS ÀÎÅÍÆäÀÌ½º ³ª¿­ ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 12. W?35 RemoteRegistry ì„œë¹„ìŠ¤ ë¹„í™œì„±í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 12. W?35 RemoteRegistry ¼­ºñ½º ºñÈ°¼ºÈ­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $rr = Get-Service RemoteRegistry -ErrorAction SilentlyContinue
     if ($rr) {
         if ($rr.Status -ne 'Stopped') { Stop-Service RemoteRegistry -Force }
         Set-Service RemoteRegistry -StartupType Disabled
-        Write-OK "W-35: RemoteRegistry ì„œë¹„ìŠ¤ ë¹„í™œì„±í™”"
+        Write-OK "W-35: RemoteRegistry ¼­ºñ½º ºñÈ°¼ºÈ­"
     }
-} catch { Write-Err "W-35: ì‹¤íŒ¨ ? $_" }
+} catch { Write-Err "W-35: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 13. W-38 í™”ë©´ë³´í˜¸ê¸° ì •ì±… (10ë¶„Â·ì•”í˜¸ ë³µê·€)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-#Requires -RunAsAdministrator     # ê´€ë¦¬ìž ê¶Œí•œ ë³´ìž¥
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 13. W-38 È­¸éº¸È£±â Á¤Ã¥ (10ºÐ¡¤¾ÏÈ£ º¹±Í)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+#Requires -RunAsAdministrator     # °ü¸®ÀÚ ±ÇÇÑ º¸Àå
 
 try {
     $desk = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop'
 
-    # í•„ìš”í•œ ê²½ë¡œë§Œ ìƒì„±
+    # ÇÊ¿äÇÑ °æ·Î¸¸ »ý¼º
     if (-not (Test-Path $desk)) {
         New-Item -Path $desk -Force -ErrorAction Stop | Out-Null
     }
 
-    # ì •ì±… ê°’ ì ìš©
+    # Á¤Ã¥ °ª Àû¿ë
     Set-ItemProperty -Path $desk -Name 'ScreenSaveActive'    -Value 1   -Type String -Force
     Set-ItemProperty -Path $desk -Name 'ScreenSaverIsSecure' -Value 1   -Type String -Force
     Set-ItemProperty -Path $desk -Name 'ScreenSaveTimeOut'   -Value 600 -Type String -Force
     Set-ItemProperty -Path $desk -Name 'SCRNSAVE.EXE'        -Value 'scrnsave.scr' -Type String -Force
 
-    Write-OK 'W-38: í™”ë©´ë³´í˜¸ê¸° ì •ì±… ì ìš© ì™„ë£Œ'
+    Write-OK 'W-38: È­¸éº¸È£±â Á¤Ã¥ Àû¿ë ¿Ï·á'
 }
 catch {
-    Write-Err "W-38: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-38: ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 14. W-39 ë¡œê·¸ì˜¨í•˜ì§€ ì•Šê³  ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš© í•´ì œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 14. W-39 ·Î±×¿ÂÇÏÁö ¾Ê°í ½Ã½ºÅÛ Á¾·á Çã¿ë ÇØÁ¦
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 #Requires -RunAsAdministrator
 
 try {
     $lsa = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
 
-    # Lsa í‚¤ëŠ” ê¸°ë³¸ì ìœ¼ë¡œ ì¡´ìž¬í•˜ì§€ë§Œ, ë§Œì¼ì„ ìœ„í•´ í™•ì¸
+    # Lsa Å°´Â ±âº»ÀûÀ¸·Î Á¸ÀçÇÏÁö¸¸, ¸¸ÀÏÀ» À§ÇØ È®ÀÎ
     if (-not (Test-Path $lsa)) {
         New-Item -Path $lsa -ErrorAction Stop | Out-Null
     }
 
-    # 0 = í—ˆìš© ì•ˆ í•¨, 1 = í—ˆìš©
+    # 0 = Çã¿ë ¾È ÇÔ, 1 = Çã¿ë
     Set-ItemProperty -Path $lsa -Name 'ShutdownWithoutLogon' -Value 0 -Type DWord -Force
 
-    Write-OK 'W-39: ë¡œê·¸ì˜¨ ì—†ì´ ì‹œìŠ¤í…œ ì¢…ë£Œ í—ˆìš© í•´ì œ ì™„ë£Œ'
+    Write-OK 'W-39: ·Î±×¿Â ¾øÀÌ ½Ã½ºÅÛ Á¾·á Çã¿ë ÇØÁ¦ ¿Ï·á'
 }
 catch {
-    Write-Err "W-39: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-39: ½ÇÆÐ ? $_"
 }
 
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 15. W-41 ë³´ì•ˆ ê°ì‚¬ë¥¼ ë¡œê·¸í•  ìˆ˜ ì—†ëŠ” ê²½ìš° ì¦‰ì‹œ ì‹œìŠ¤í…œ ì¢…ë£Œ 
-#     W-52 ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ìˆ¨ê¹€
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 15. W-41 º¸¾È °¨»ç¸¦ ·Î±×ÇÒ ¼ö ¾ø´Â °æ¿ì Áï½Ã ½Ã½ºÅÛ Á¾·á 
+#     W-52 ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¼û±è
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
-    # ë ˆì§€ìŠ¤íŠ¸ë¦¬ ê²½ë¡œ ì •ì˜
+    # ·¹Áö½ºÆ®¸® °æ·Î Á¤ÀÇ
     $sysPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
     $lsaPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
 
-    # ì—†ìœ¼ë©´ í‚¤ ìƒì„±
+    # ¾øÀ¸¸é Å° »ý¼º
     if (-not (Test-Path -Path $sysPath)) {
         New-Item -Path $sysPath -Force | Out-Null
     }
@@ -282,7 +282,7 @@ try {
         New-Item -Path $lsaPath -Force | Out-Null
     }
 
-    # W-52: ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ìˆ¨ê¹€
+    # W-52: ¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¼û±è
     Set-ItemProperty `
         -Path $sysPath `
         -Name 'DontDisplayLastUserName' `
@@ -290,7 +290,7 @@ try {
         -Type DWord `
         -Force
 
-    # W-41: ë³´ì•ˆ ê°ì‚¬ë¥¼ ë¡œê·¸í•  ìˆ˜ ì—†ì„ ë•Œ ì‹œìŠ¤í…œ ì¢…ë£Œ ë¹„í™œì„±í™” (0 = ë¹„í™œì„±í™”)
+    # W-41: º¸¾È °¨»ç¸¦ ·Î±×ÇÒ ¼ö ¾øÀ» ¶§ ½Ã½ºÅÛ Á¾·á ºñÈ°¼ºÈ­ (0 = ºñÈ°¼ºÈ­)
     Set-ItemProperty `
         -Path $lsaPath `
         -Name 'CrashOnAuditFail' `
@@ -298,18 +298,18 @@ try {
         -Type DWord `
         -Force
 
-    Write-OK "W-41/W-52: ì„¤ì • ì ìš© ì™„ë£Œ (ë§ˆì§€ë§‰ ì‚¬ìš©ìž ì´ë¦„ ìˆ¨ê¹€, CrashOnAuditFail í•´ì œ)"
+    Write-OK "W-41/W-52: ¼³Á¤ Àû¿ë ¿Ï·á (¸¶Áö¸· »ç¿ëÀÚ ÀÌ¸§ ¼û±è, CrashOnAuditFail ÇØÁ¦)"
 }
 catch {
-    Write-Err "W-41/W-52: ì‹¤íŒ¨ ? $($_.Exception.Message)"
+    Write-Err "W-41/W-52: ½ÇÆÐ ? $($_.Exception.Message)"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 16. W-40 / W-44 ì‚¬ìš©ìž ê¶Œí•œ ì œí•œ (secedit)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 16. W-40 / W-44 »ç¿ëÀÚ ±ÇÇÑ Á¦ÇÑ (secedit)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
-function Set-SecPol {             # (â€» ê¸°ì¡´ì— ì´ë¯¸ ìžˆë‹¤ë©´ ì´ í•¨ìˆ˜ ë¶€ë¶„ì€ ìƒëžµ)
+function Set-SecPol {             # (¡Ø ±âÁ¸¿¡ ÀÌ¹Ì ÀÖ´Ù¸é ÀÌ ÇÔ¼ö ºÎºÐÀº »ý·«)
     param($Area,$Key,$Val)
     $cfg="$env:TEMP\secpol.inf"
     secedit /export /cfg $cfg /areas $Area | Out-Null
@@ -323,36 +323,36 @@ function Set-SecPol {             # (â€» ê¸°ì¡´ì— ì´ë¯¸ ìžˆë‹¤ë©´ ì´ í•¨ìˆ˜ ë
     Remove-Item $cfg -Force
 }
 
-try { Set-SecPol 'USER_RIGHTS' 'SeRemoteShutdownPrivilege' '*S-1-5-32-544'; Write-OK "W-40: ì›ê²© ê°•ì œ ì¢…ë£Œ ê¶Œí•œ ì œí•œ" }
-catch { Write-Err "W-40: ì‹¤íŒ¨ ? $_" }
+try { Set-SecPol 'USER_RIGHTS' 'SeRemoteShutdownPrivilege' '*S-1-5-32-544'; Write-OK "W-40: ¿ø°Ý °­Á¦ Á¾·á ±ÇÇÑ Á¦ÇÑ" }
+catch { Write-Err "W-40: ½ÇÆÐ ? $_" }
 
-try { Set-SecPol 'USER_RIGHTS' 'AllocateDASD' '*S-1-5-32-544'; Write-OK "W-44: ì´ë™ì‹ ë¯¸ë””ì–´ í¬ë§·/êº¼ë‚´ê¸° ê¶Œí•œ ì œí•œ" }
-catch { Write-Err "W-44: ì‹¤íŒ¨ ? $_" }
+try { Set-SecPol 'USER_RIGHTS' 'AllocateDASD' '*S-1-5-32-544'; Write-OK "W-44: ÀÌµ¿½Ä ¹Ìµð¾î Æ÷¸Ë/²¨³»±â ±ÇÇÑ Á¦ÇÑ" }
+catch { Write-Err "W-44: ½ÇÆÐ ? $_" }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 16. W-42 SAMÂ·ê³µìœ  ìµëª… ì—´ê±° ì°¨ë‹¨
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 16. W-42 SAM¡¤°øÀ¯ ÀÍ¸í ¿­°Å Â÷´Ü
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $lsa = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
-    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }      # â† ë³€ê²½(ì¡°ê±´ë¶€ ìƒì„±)
+    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }      # ¡ç º¯°æ(Á¶°ÇºÎ »ý¼º)
     Set-ItemProperty $lsa RestrictAnonymous    1
     Set-ItemProperty $lsa RestrictAnonymousSAM 1
-    Write-OK "W-42: ìµëª… ì—´ê±° ì œí•œ ì™„ë£Œ"
-} catch { Write-Err "W-42: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-42: ÀÍ¸í ¿­°Å Á¦ÇÑ ¿Ï·á"
+} catch { Write-Err "W-42: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 17. W-43 ìžë™ ë¡œê·¸ì˜¨ í•´ì œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 17. W-43 ÀÚµ¿ ·Î±×¿Â ÇØÁ¦
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $winlogonPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
 
-    # (1) í‚¤ê°€ ì—†ìœ¼ë©´ ìƒì„±
+    # (1) Å°°¡ ¾øÀ¸¸é »ý¼º
     if (-not (Test-Path -Path $winlogonPath)) {
         New-Item -Path $winlogonPath -Force | Out-Null
     }
 
-    # (2) ìžë™ ë¡œê·¸ì˜¨ ê¸°ëŠ¥ í•´ì œ (0 = ë¹„í™œì„±í™”)
+    # (2) ÀÚµ¿ ·Î±×¿Â ±â´É ÇØÁ¦ (0 = ºñÈ°¼ºÈ­)
     Set-ItemProperty `
         -Path $winlogonPath `
         -Name 'AutoAdminLogon' `
@@ -360,65 +360,65 @@ try {
         -Type DWord `
         -Force
 
-    Write-OK "W-43: ìžë™ ë¡œê·¸ì˜¨ ê¸°ëŠ¥ í•´ì œ ì™„ë£Œ"
+    Write-OK "W-43: ÀÚµ¿ ·Î±×¿Â ±â´É ÇØÁ¦ ¿Ï·á"
 }
 catch {
-    Write-Err "W-43: ì‹¤íŒ¨ ? $($_.Exception.Message)"
+    Write-Err "W-43: ½ÇÆÐ ? $($_.Exception.Message)"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 18. W?46 Everyone ì‚¬ìš© ê¶Œí•œì„ ìµëª… ì‚¬ìš©ìžì— ì ìš© í•´ì œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 18. W?46 Everyone »ç¿ë ±ÇÇÑÀ» ÀÍ¸í »ç¿ëÀÚ¿¡ Àû¿ë ÇØÁ¦
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $lsa='HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
     Set-ItemProperty $lsa EveryoneIncludesAnonymous 0
-    Write-OK "W-46: Everyone ê¶Œí•œì—ì„œ ìµëª… ì‚¬ìš©ìž ì œì™¸"
-} catch { Write-Err "W-46: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-46: Everyone ±ÇÇÑ¿¡¼­ ÀÍ¸í »ç¿ëÀÚ Á¦¿Ü"
+} catch { Write-Err "W-46: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 19. W-48~56 íŒ¨ìŠ¤ì›Œë“œ ì •ì±…Â·ë¹ˆ ì•”í˜¸ ì œí•œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 19. W-48~56 ÆÐ½º¿öµå Á¤Ã¥¡¤ºó ¾ÏÈ£ Á¦ÇÑ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     net accounts /minpwlen:8 /minpwage:1 /uniquepw:12 | Out-Null
 
     $lsa = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
-    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # â† ì¡°ê±´ë¶€ ìƒì„±(ìˆ˜ì •)
+    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # ¡ç Á¶°ÇºÎ »ý¼º(¼öÁ¤)
 
     Set-ItemProperty $lsa PasswordComplexity   1
     Set-ItemProperty $lsa LimitBlankPasswordUse 1
-    Write-OK "W-48~56: íŒ¨ìŠ¤ì›Œë“œ ë³µìž¡ì„±Â·ìž¬ì‚¬ìš© ì œí•œ ì™„ë£Œ"
-} catch { Write-Err "W-48~56: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-48~56: ÆÐ½º¿öµå º¹Àâ¼º¡¤Àç»ç¿ë Á¦ÇÑ ¿Ï·á"
+} catch { Write-Err "W-48~56: ½ÇÆÐ ? $_" }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 20. W-54: ìµëª… SID/ì´ë¦„ ë³€í™˜ í—ˆìš© í•´ì œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 20. W-54: ÀÍ¸í SID/ÀÌ¸§ º¯È¯ Çã¿ë ÇØÁ¦
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $lsa = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
-    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # â† í•œ ì¤„ë§Œ ìˆ˜ì •
+    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # ¡ç ÇÑ ÁÙ¸¸ ¼öÁ¤
     Set-ItemProperty $lsa -Name LSAAnonymousNameLookup -Value 0
-    Write-OK  "W-54: ìµëª… SID/ì´ë¦„ ë³€í™˜ í—ˆìš© í•´ì œ ì™„ë£Œ"
+    Write-OK  "W-54: ÀÍ¸í SID/ÀÌ¸§ º¯È¯ Çã¿ë ÇØÁ¦ ¿Ï·á"
 } catch {
-    Write-Err "W-54: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-54: ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 21. W-56: ì½˜ì†” ë¡œê·¸ì˜¨ ì‹œ ë¡œì»¬ ê³„ì •ì—ì„œ ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 21. W-56: ÄÜ¼Ö ·Î±×¿Â ½Ã ·ÎÄÃ °èÁ¤¿¡¼­ ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $lsa = 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
-    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # â† ë³€ê²½: ì¡°ê±´ë¶€ ìƒì„±
+    if (-not (Test-Path $lsa)) { New-Item $lsa | Out-Null }   # ¡ç º¯°æ: Á¶°ÇºÎ »ý¼º
     Set-ItemProperty $lsa -Name LimitBlankPasswordUse -Value 1
-    Write-OK  "W-56: ë¹ˆ ì•”í˜¸ ì‚¬ìš© ì œí•œ ì„¤ì • ì™„ë£Œ"
+    Write-OK  "W-56: ºó ¾ÏÈ£ »ç¿ë Á¦ÇÑ ¼³Á¤ ¿Ï·á"
 } catch {
-    Write-Err "W-56: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-56: ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 22. W-57 RDP ê´€ë ¨ ê·¸ë£¹ ì •ë¦¬
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 22. W-57 RDP °ü·Ã ±×·ì Á¤¸®
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $tempInf = "$env:TEMP\Rdp.inf"
     $tempDb  = "$env:TEMP\Rdp.sdb"
@@ -432,14 +432,14 @@ try {
 
     secedit /configure /db $tempDb /cfg $tempInf /areas USER_RIGHTS
 
-    Write-OK "W-57: RDP ì ‘ê·¼ ê¶Œí•œ ê·¸ë£¹ ì„¤ì • ì™„ë£Œ"
+    Write-OK "W-57: RDP Á¢±Ù ±ÇÇÑ ±×·ì ¼³Á¤ ¿Ï·á"
 } catch {
-    Write-Err "W-57: ì‹¤íŒ¨ ? $($_.Exception.Message)"
+    Write-Err "W-57: ½ÇÆÐ ? $($_.Exception.Message)"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 24. W?58 RDP ì•”í˜¸í™” ìˆ˜ì¤€ ìµœìƒ/ W?67 RDP ì„¸ì…˜ Idle íƒ€ìž„ì•„ì›ƒ 10ë¶„
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 24. W?58 RDP ¾ÏÈ£È­ ¼öÁØ ÃÖ»ó/ W?67 RDP ¼¼¼Ç Idle Å¸ÀÓ¾Æ¿ô 10ºÐ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
 $ts = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
 if (-not (Test-Path $ts)) {
@@ -447,71 +447,71 @@ if (-not (Test-Path $ts)) {
 }
 Set-ItemProperty $ts MinEncryptionLevel 3
 Set-ItemProperty $ts MaxIdleTime 600000
-    Write-OK "W-58: í„°ë¯¸ë„ ì„œë¹„ìŠ¤ ì•”í˜¸í™” ìˆ˜ì¤€ ìµœìƒ, W?67 RDP ì„¸ì…˜ Idle íƒ€ìž„ì•„ì›ƒ 10ë¶„"
-} catch { Write-Err "W-58: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-58: ÅÍ¹Ì³Î ¼­ºñ½º ¾ÏÈ£È­ ¼öÁØ ÃÖ»ó, W?67 RDP ¼¼¼Ç Idle Å¸ÀÓ¾Æ¿ô 10ºÐ"
+} catch { Write-Err "W-58: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 22. W?67 RDP ì„¸ì…˜ Idle íƒ€ìž„ì•„ì›ƒ 10ë¶„
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 22. W?67 RDP ¼¼¼Ç Idle Å¸ÀÓ¾Æ¿ô 10ºÐ
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $ts='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
     Set-ItemProperty $ts MaxIdleTime 600000
-    Write-OK "W-67: RDP ì„¸ì…˜ íƒ€ìž„ì•„ì›ƒ 10ë¶„"
-} catch { Write-Err "W-67: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-67: RDP ¼¼¼Ç Å¸ÀÓ¾Æ¿ô 10ºÐ"
+} catch { Write-Err "W-67: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 23. W-69 ì •ì±…ì— ë”°ë¥¸ ì‹œìŠ¤í…œ ë¡œê¹… ì„¤ì •
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 23. W-69 Á¤Ã¥¿¡ µû¸¥ ½Ã½ºÅÛ ·Î±ë ¼³Á¤
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
-    # ê³„ì • ê´€ë¦¬ ê°ì‚¬
-    auditpol /set /subcategory:"ì‚¬ìš©ìž ê³„ì • ê´€ë¦¬" /failure:enable
-    auditpol /set /subcategory:"ë³´ì•ˆ ê·¸ë£¹ ê´€ë¦¬" /success:enable /failure:enable
+    # °èÁ¤ °ü¸® °¨»ç
+    auditpol /set /subcategory:"»ç¿ëÀÚ °èÁ¤ °ü¸®" /failure:enable
+    auditpol /set /subcategory:"º¸¾È ±×·ì °ü¸®" /success:enable /failure:enable
 
-    # ê³„ì • ë¡œê·¸ì˜¨ ì´ë²¤íŠ¸ ê°ì‚¬
-    auditpol /set /subcategory:"ìžê²© ì¦ëª… ìœ íš¨ì„± ê²€ì‚¬" /success:enable /failure:enable
-    auditpol /set /subcategory:"Kerberos ì¸ì¦ ì„œë¹„ìŠ¤" /success:enable /failure:enable
-    auditpol /set /subcategory:"Kerberos ì„œë¹„ìŠ¤ í‹°ì¼“ ìž‘ì—…" /success:enable /failure:enable
+    # °èÁ¤ ·Î±×¿Â ÀÌº¥Æ® °¨»ç
+    auditpol /set /subcategory:"ÀÚ°Ý Áõ¸í À¯È¿¼º °Ë»ç" /success:enable /failure:enable
+    auditpol /set /subcategory:"Kerberos ÀÎÁõ ¼­ºñ½º" /success:enable /failure:enable
+    auditpol /set /subcategory:"Kerberos ¼­ºñ½º Æ¼ÄÏ ÀÛ¾÷" /success:enable /failure:enable
 
-    # ë¡œê·¸ì˜¨ ì´ë²¤íŠ¸ ê°ì‚¬
-    auditpol /set /subcategory:"ë¡œê·¸ì˜¨" /success:enable /failure:enable
-    auditpol /set /subcategory:"íŠ¹ìˆ˜ ë¡œê·¸ì˜¨" /success:enable /failure:enable
-    auditpol /set /subcategory:"ê³„ì • ìž ê¸ˆ" /success:enable /failure:enable
+    # ·Î±×¿Â ÀÌº¥Æ® °¨»ç
+    auditpol /set /subcategory:"·Î±×¿Â" /success:enable /failure:enable
+    auditpol /set /subcategory:"Æ¯¼ö ·Î±×¿Â" /success:enable /failure:enable
+    auditpol /set /subcategory:"°èÁ¤ Àá±Ý" /success:enable /failure:enable
 
-    # ì •ì±… ë³€ê²½ ê°ì‚¬
-    auditpol /set /subcategory:"ê°ì‚¬ ì •ì±… ë³€ê²½" /success:enable /failure:enable
-    auditpol /set /subcategory:"ê¶Œí•œ ë¶€ì—¬ ì •ì±… ë³€ê²½" /success:enable /failure:enable
-    auditpol /set /subcategory:"ì¸ì¦ ì •ì±… ë³€ê²½" /success:enable /failure:enable
+    # Á¤Ã¥ º¯°æ °¨»ç
+    auditpol /set /subcategory:"°¨»ç Á¤Ã¥ º¯°æ" /success:enable /failure:enable
+    auditpol /set /subcategory:"±ÇÇÑ ºÎ¿© Á¤Ã¥ º¯°æ" /success:enable /failure:enable
+    auditpol /set /subcategory:"ÀÎÁõ Á¤Ã¥ º¯°æ" /success:enable /failure:enable
 
-    # ê¶Œí•œ ì‚¬ìš© ê°ì‚¬
-    auditpol /set /subcategory:"ì¤‘ìš”í•œ ê¶Œí•œ ì‚¬ìš©" /failure:enable
-    auditpol /set /subcategory:"ê¸°íƒ€ ê¶Œí•œ ì‚¬ìš© ì´ë²¤íŠ¸" /failure:enable
+    # ±ÇÇÑ »ç¿ë °¨»ç
+    auditpol /set /subcategory:"Áß¿äÇÑ ±ÇÇÑ »ç¿ë" /failure:enable
+    auditpol /set /subcategory:"±âÅ¸ ±ÇÇÑ »ç¿ë ÀÌº¥Æ®" /failure:enable
 
-    # í”„ë¡œì„¸ìŠ¤ ì¶”ì 
-    auditpol /set /subcategory:"í”„ë¡œì„¸ìŠ¤ ë§Œë“¤ê¸°" /success:enable
-    auditpol /set /subcategory:"í”„ë¡œì„¸ìŠ¤ ì¢…ë£Œ" /success:enable
+    # ÇÁ·Î¼¼½º ÃßÀû
+    auditpol /set /subcategory:"ÇÁ·Î¼¼½º ¸¸µé±â" /success:enable
+    auditpol /set /subcategory:"ÇÁ·Î¼¼½º Á¾·á" /success:enable
 
-    # ë””ë ‰í„°ë¦¬ ì„œë¹„ìŠ¤ ì•¡ì„¸ìŠ¤ ê°ì‚¬
-    auditpol /set /subcategory:"ë””ë ‰í„°ë¦¬ ì„œë¹„ìŠ¤ ì•¡ì„¸ìŠ¤" /failure:enable
+    # µð·ºÅÍ¸® ¼­ºñ½º ¾×¼¼½º °¨»ç
+    auditpol /set /subcategory:"µð·ºÅÍ¸® ¼­ºñ½º ¾×¼¼½º" /failure:enable
 
-    Write-OK "W-69: ê°ì‚¬ ì •ì±… ë¡œì»¬ ë³´ì•ˆ ì •ì±… ì ìš© ì™„ë£Œ"
+    Write-OK "W-69: °¨»ç Á¤Ã¥ ·ÎÄÃ º¸¾È Á¤Ã¥ Àû¿ë ¿Ï·á"
 } catch {
-    Write-Err "W-69: ê°ì‚¬ ì •ì±… ì ìš© ì‹¤íŒ¨ ? $_"
+    Write-Err "W-69: °¨»ç Á¤Ã¥ Àû¿ë ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 24. W?71 ì´ë²¤íŠ¸ ë¡œê·¸ ê²½ë¡œ Everyone ì œê±° (ìµœìƒìœ„ í´ë”ë§Œ)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 24. W?71 ÀÌº¥Æ® ·Î±× °æ·Î Everyone Á¦°Å (ÃÖ»óÀ§ Æú´õ¸¸)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 $LogDirs = @("$env:SystemRoot\System32\config","$env:SystemRoot\System32\logfiles")
 foreach($p in $LogDirs){
     try{
         icacls $p /remove:g "Everyone" /inheritance:d >$null 2>&1
-        Write-OK "W-71: $p ê¶Œí•œ ì œí•œ"
-    }catch{ Write-Err "W-71: $p ì‹¤íŒ¨ ? $_" }
+        Write-OK "W-71: $p ±ÇÇÑ Á¦ÇÑ"
+    }catch{ Write-Err "W-71: $p ½ÇÆÐ ? $_" }
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 25. W?73 ì‚¬ìš©ìž í”„ë¦°í„° ë“œë¼ì´ë²„ ì„¤ì¹˜ ê¸ˆì§€
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 25. W?73 »ç¿ëÀÚ ÇÁ¸°ÅÍ µå¶óÀÌ¹ö ¼³Ä¡ ±ÝÁö
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
 try {
 $pr = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers'
@@ -519,12 +519,12 @@ if (-not (Test-Path $pr)) {
     New-Item -Path $pr | Out-Null
 }
 Set-ItemProperty $pr AddPrinterDrivers 0
-    Write-OK "W-73: í”„ë¦°í„° ë“œë¼ì´ë²„ ì„¤ì¹˜ ê¸ˆì§€"
-} catch { Write-Err "W-73: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-73: ÇÁ¸°ÅÍ µå¶óÀÌ¹ö ¼³Ä¡ ±ÝÁö"
+} catch { Write-Err "W-73: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 26. W?74 ì„¸ì…˜ ìœ íœ´ 15ë¶„ í›„ ìžë™ ì¢…ë£Œ
-#  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 26. W?74 ¼¼¼Ç À¯ÈÞ 15ºÐ ÈÄ ÀÚµ¿ Á¾·á
+#  ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
 try {
     $srv = 'HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters'
@@ -533,58 +533,58 @@ try {
     }
     Set-ItemProperty -Path $srv -Name 'EnableForcedLogoff' -Value 1 -Type DWord -Force
     Set-ItemProperty -Path $srv -Name 'AutoDisconnect' -Value 15 -Type DWord -Force
-    Write-OK "W-74: ì„¸ì…˜ ìœ íœ´ 15ë¶„ í›„ ìžë™ ì¢…ë£Œ"
+    Write-OK "W-74: ¼¼¼Ç À¯ÈÞ 15ºÐ ÈÄ ÀÚµ¿ Á¾·á"
 } catch {
-    Write-Err "W-74: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-74: ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 27. W?75 ê²½ê³  ë°°ë„ˆ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 27. W?75 °æ°í ¹è³Ê
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
-    $cap="ê²½ê³ : ë¬´ë‹¨ ì ‘ì† ê¸ˆì§€"
-    $txt="ì´ ì‹œìŠ¤í…œì€ í—ˆê°€ë°›ì€ ì‚¬ìš©ìžë§Œ ì ‘ì†í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.`në¬´ë‹¨ ì ‘ì† ì‹œ ë²•ì  ì²˜ë²Œì„ ë°›ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. `n`nApply version 251203"
+    $cap="°æ°í: ¹«´Ü Á¢¼Ó ±ÝÁö"
+    $txt="ÀÌ ½Ã½ºÅÛÀº Çã°¡¹ÞÀº »ç¿ëÀÚ¸¸ Á¢¼ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.`n¹«´Ü Á¢¼Ó ½Ã ¹ýÀû Ã³¹úÀ» ¹ÞÀ» ¼ö ÀÖ½À´Ï´Ù. `n`nApply version 251203"
     $sys='HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
     Set-ItemProperty $sys legalnoticecaption $cap
     Set-ItemProperty $sys legalnoticetext  $txt
-    Write-OK "W-75: ê²½ê³  ë°°ë„ˆ ì„¤ì • ì™„ë£Œ"
-} catch { Write-Err "W-75: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-75: °æ°í ¹è³Ê ¼³Á¤ ¿Ï·á"
+} catch { Write-Err "W-75: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 28. W?76 ì‚¬ìš©ìž í™ˆ ë””ë ‰í„°ë¦¬ Everyone ê¶Œí•œ ì œê±° + $NewAdminName ê¶Œí•œ ë¶€ì—¬
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 28. W?76 »ç¿ëÀÚ È¨ µð·ºÅÍ¸® Everyone ±ÇÇÑ Á¦°Å + $NewAdminName ±ÇÇÑ ºÎ¿©
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $Skip = @('All Users','Default','Default User','Public','DefaultAppPool','MSSQL','defaultuser0')
     
     Get-ChildItem 'C:\Users' -Directory | Where-Object { $Skip -notcontains $_.Name } | ForEach-Object {
         $userDir = $_.FullName
 
-        # Everyone ê·¸ë£¹ ì œê±°
+        # Everyone ±×·ì Á¦°Å
         icacls $userDir /remove:g "Everyone" /T >$null 2>&1
 
-        # ê´€ë¦¬ìž ê³„ì •ì— ì „ì²´ ê¶Œí•œ ë¶€ì—¬
+        # °ü¸®ÀÚ °èÁ¤¿¡ ÀüÃ¼ ±ÇÇÑ ºÎ¿©
         icacls $userDir /grant:r "${NewAdminName}:(OI)(CI)(F)" /T >$null 2>&1
 
-        Write-OK "W-76: [$($_.Name)] Everyone ì œê±° ë° $NewAdminName ì „ì²´ ê¶Œí•œ ë¶€ì—¬"
+        Write-OK "W-76: [$($_.Name)] Everyone Á¦°Å ¹× $NewAdminName ÀüÃ¼ ±ÇÇÑ ºÎ¿©"
     }
 }
 catch {
-    Write-Err "W-76: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-76: ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 29. W?77 LAN Manager ì¸ì¦ ìˆ˜ì¤€ 3 (CIS ìµœì‹  ê¶Œìž¥ì€ 5 â†’ í•„ìš” ì‹œ ìˆ˜ì •)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 29. W?77 LAN Manager ÀÎÁõ ¼öÁØ 3 (CIS ÃÖ½Å ±ÇÀåÀº 5 ¡æ ÇÊ¿ä ½Ã ¼öÁ¤)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $lsa='HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
     Set-ItemProperty $lsa LmCompatibilityLevel 3
-    Write-OK "W-77: LAN Manager ì¸ì¦ ìˆ˜ì¤€ 3"
-} catch { Write-Err "W-77: ì‹¤íŒ¨ ? $_" }
+    Write-OK "W-77: LAN Manager ÀÎÁõ ¼öÁØ 3"
+} catch { Write-Err "W-77: ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 30. W?78 ë³´ì•ˆ ì±„ë„ ë°ì´í„° ì„œëª…Â·ì•”í˜¸í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 30. W?78 º¸¾È Ã¤³Î µ¥ÀÌÅÍ ¼­¸í¡¤¾ÏÈ£È­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $nlg = 'HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters'
     if (-not (Test-Path $nlg)) {
@@ -593,22 +593,22 @@ try {
     Set-ItemProperty $nlg RequireSignOrSeal 1
     Set-ItemProperty $nlg SealSecureChannel 1
     Set-ItemProperty $nlg SignSecureChannel 1
-    Write-OK "W-78: ë³´ì•ˆ ì±„ë„ ì•”í˜¸í™”Â·ì„œëª… ì„¤ì •"
+    Write-OK "W-78: º¸¾È Ã¤³Î ¾ÏÈ£È­¡¤¼­¸í ¼³Á¤"
 } catch {
-    Write-Err "W-78: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-78: ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 31. Windows Update ìžë™ ì—…ë°ì´íŠ¸ ì¤‘ì§€
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 31. Windows Update ÀÚµ¿ ¾÷µ¥ÀÌÆ® ÁßÁö
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
-   # ìžë™ ì—…ë°ì´íŠ¸ë§Œ ì¤‘ì§€ (ì„œë¹„ìŠ¤ëŠ” ê·¸ëŒ€ë¡œ ìœ ì§€)
+   # ÀÚµ¿ ¾÷µ¥ÀÌÆ®¸¸ ÁßÁö (¼­ºñ½º´Â ±×´ë·Î À¯Áö)
     $wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
     if (-not (Test-Path $wu)) {
         New-Item -Path $wu | Out-Null
     }
 
-    # ìžë™ ì—…ë°ì´íŠ¸ ì •ì±…(ë ˆì§€ìŠ¤íŠ¸ë¦¬) ë¹„í™œì„±í™”
+    # ÀÚµ¿ ¾÷µ¥ÀÌÆ® Á¤Ã¥(·¹Áö½ºÆ®¸®) ºñÈ°¼ºÈ­
 $wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
 if (-not (Test-Path $wu)) {
     New-Item -Path $wu | Out-Null
@@ -616,69 +616,69 @@ if (-not (Test-Path $wu)) {
 Set-ItemProperty -Path $wu -Name 'NoAutoUpdate' -Value 1
 Set-ItemProperty -Path $wu -Name 'AUOptions' -Value 1
 
-    Write-OK "W-78: Windows Update ìžë™ ì—…ë°ì´íŠ¸ ì¤‘ì§€"
+    Write-OK "W-78: Windows Update ÀÚµ¿ ¾÷µ¥ÀÌÆ® ÁßÁö"
 }
 catch {
-    Write-Err "W-78: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-78: ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 32. íŒŒì¼ í™•ìž¥ìž ìˆ¨ê¹€ í•´ì œ
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 32. ÆÄÀÏ È®ÀåÀÚ ¼û±è ÇØÁ¦
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Name 'HideFileExt' -Value 0
-    Write-OK "ì¶”ê°€: íŒŒì¼ í™•ìž¥ìž ìˆ¨ê¹€ í•´ì œ"
-} catch { Write-Err "í™•ìž¥ìž ì„¤ì • ì‹¤íŒ¨ ? $_" }
+    Write-OK "Ãß°¡: ÆÄÀÏ È®ÀåÀÚ ¼û±è ÇØÁ¦"
+} catch { Write-Err "È®ÀåÀÚ ¼³Á¤ ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 33. ì´ë²¤íŠ¸ ë¡œê·¸ ìµœëŒ€ í¬ê¸° ì„¤ì •
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 33. ÀÌº¥Æ® ·Î±× ÃÖ´ë Å©±â ¼³Á¤
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     wevtutil sl Security /ms:41943040
     wevtutil sl Application /ms:20971520
     wevtutil sl System /ms:20971520
-    Write-OK "ì¶”ê°€: ì´ë²¤íŠ¸ ë¡œê·¸ ìµœëŒ€ í¬ê¸° ì„¤ì • ì™„ë£Œ"
-} catch { Write-Err "ì´ë²¤íŠ¸ ë¡œê·¸ í¬ê¸° ì„¤ì • ì‹¤íŒ¨ ? $_" }
+    Write-OK "Ãß°¡: ÀÌº¥Æ® ·Î±× ÃÖ´ë Å©±â ¼³Á¤ ¿Ï·á"
+} catch { Write-Err "ÀÌº¥Æ® ·Î±× Å©±â ¼³Á¤ ½ÇÆÐ ? $_" }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 35. WDigest ì¸ì¦ ë¹„í™œì„±í™”
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 35. WDigest ÀÎÁõ ºñÈ°¼ºÈ­
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
         Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest' -Name 'UseLogonCredential' -Value 0 -Type DWord
-        Write-OK "ì¶”ê°€: WDigest ì¸ì¦ ë¹„í™œì„±í™”"
-    } catch { Write-Err "WDigest ì„¤ì • ì‹¤íŒ¨ ? $_" }
+        Write-OK "Ãß°¡: WDigest ÀÎÁõ ºñÈ°¼ºÈ­"
+    } catch { Write-Err "WDigest ¼³Á¤ ½ÇÆÐ ? $_" }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 36. ì›ê²© ë°ìŠ¤í¬í†± í¬íŠ¸ ë³€ê²½ ë° ë°©í™”ë²½ í—ˆìš© (netsh ë°©ì‹)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-$NewPort = 48321  # ì›í•˜ëŠ” í¬íŠ¸ë¡œ ìˆ˜ì •í•˜ì„¸ìš”
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 36. ¿ø°Ý µ¥½ºÅ©Åé Æ÷Æ® º¯°æ ¹× ¹æÈ­º® Çã¿ë (netsh ¹æ½Ä)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+$NewPort = 48321  # ¿øÇÏ´Â Æ÷Æ®·Î ¼öÁ¤ÇÏ¼¼¿ä
 
 try {
-    # RDP í¬íŠ¸ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ë³€ê²½
+    # RDP Æ÷Æ® ·¹Áö½ºÆ®¸® º¯°æ
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
                      -Name 'PortNumber' -Value $NewPort -Type DWord
-    Write-OK "ì¶”ê°€: ì›ê²© ë°ìŠ¤í¬í†± í¬íŠ¸ë¥¼ $NewPort ë¡œ ë³€ê²½í•¨"
+    Write-OK "Ãß°¡: ¿ø°Ý µ¥½ºÅ©Åé Æ÷Æ®¸¦ $NewPort ·Î º¯°æÇÔ"
 } catch {
-    Write-Err "ì›ê²© í¬íŠ¸ ë³€ê²½ ì‹¤íŒ¨ ? $_"
+    Write-Err "¿ø°Ý Æ÷Æ® º¯°æ ½ÇÆÐ ? $_"
 }
 
 try {
-    # ê¸°ì¡´ ê¸°ë³¸ RDP ë°©í™”ë²½ ê·œì¹™ ë¹„í™œì„±í™”
-    netsh advfirewall firewall set rule name="ì›ê²© ë°ìŠ¤í¬í†± - ì‚¬ìš©ìž ëª¨ë“œ (TCP-In)" new enable=No >$null 2>&1
+    # ±âÁ¸ ±âº» RDP ¹æÈ­º® ±ÔÄ¢ ºñÈ°¼ºÈ­
+    netsh advfirewall firewall set rule name="¿ø°Ý µ¥½ºÅ©Åé - »ç¿ëÀÚ ¸ðµå (TCP-In)" new enable=No >$null 2>&1
 
-    # ìƒˆ í¬íŠ¸ë¡œ ë°©í™”ë²½ ê·œì¹™ ì¶”ê°€
+    # »õ Æ÷Æ®·Î ¹æÈ­º® ±ÔÄ¢ Ãß°¡
     netsh advfirewall firewall add rule name="Allow RDP Port $NewPort" `
          dir=in action=allow protocol=TCP localport=$NewPort >$null 2>&1
 
-    Write-OK "ì¶”ê°€: netsh ë°©ì‹ìœ¼ë¡œ í¬íŠ¸ $NewPort í—ˆìš© ê·œì¹™ ì¶”ê°€"
+    Write-OK "Ãß°¡: netsh ¹æ½ÄÀ¸·Î Æ÷Æ® $NewPort Çã¿ë ±ÔÄ¢ Ãß°¡"
 } catch {
-    Write-Err "ë°©í™”ë²½ ê·œì¹™ ì¶”ê°€ ì‹¤íŒ¨ ? $_"
+    Write-Err "¹æÈ­º® ±ÔÄ¢ Ãß°¡ ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 37. TCP ì—°ê²° íŠœë‹ ë° RDP ê´€ë ¨ ì„¤ì •
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 37. TCP ¿¬°á Æ©´× ¹× RDP °ü·Ã ¼³Á¤
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 
 try {
     $tcpip = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters'
@@ -687,9 +687,9 @@ try {
     Set-ItemProperty -Path $tcpip -Name 'TcpTimedWaitDelay' -Value 30 -Type DWord
     Set-ItemProperty -Path $tcpip -Name 'MaxUserPort' -Value 65534 -Type DWord
 
-    Write-OK "ì¶”ê°€: TCP TimeWaitDelay(30ì´ˆ) ë° MaxUserPort(65534) ì ìš© ì™„ë£Œ"
+    Write-OK "Ãß°¡: TCP TimeWaitDelay(30ÃÊ) ¹× MaxUserPort(65534) Àû¿ë ¿Ï·á"
 } catch {
-    Write-Err "TCP ì—°ê²° íŠœë‹ ì‹¤íŒ¨ ? $_"
+    Write-Err "TCP ¿¬°á Æ©´× ½ÇÆÐ ? $_"
 }
 
 try {
@@ -699,9 +699,9 @@ try {
     Set-ItemProperty -Path $tsRoot -Name 'fDenyTSConnections' -Value 0 -Type DWord
     Set-ItemProperty -Path $tsRoot -Name 'fSingleSessionPerUser' -Value 0 -Type DWord
 
-    Write-OK "ì¶”ê°€: RDP í™œì„±í™” ë° ë©€í‹° ì„¸ì…˜ í—ˆìš© ì„¤ì • ì™„ë£Œ"
+    Write-OK "Ãß°¡: RDP È°¼ºÈ­ ¹× ¸ÖÆ¼ ¼¼¼Ç Çã¿ë ¼³Á¤ ¿Ï·á"
 } catch {
-    Write-Err "RDP ê¸°ë³¸ ì„¤ì • ì‹¤íŒ¨ ? $_"
+    Write-Err "RDP ±âº» ¼³Á¤ ½ÇÆÐ ? $_"
 }
 
 try {
@@ -710,63 +710,63 @@ try {
 
     Set-ItemProperty -Path $rdpTcp -Name 'MaxInstanceCount' -Value 2 -Type DWord
 
-    Write-OK "ì¶”ê°€: RDP ë™ì‹œ ì ‘ì† ìµœëŒ€ 2ëª… ì„¤ì • ì™„ë£Œ"
+    Write-OK "Ãß°¡: RDP µ¿½Ã Á¢¼Ó ÃÖ´ë 2¸í ¼³Á¤ ¿Ï·á"
 } catch {
-    Write-Err "RDP ë™ì‹œ ì ‘ì† ìˆ˜ ì„¤ì • ì‹¤íŒ¨ ? $_"
+    Write-Err "RDP µ¿½Ã Á¢¼Ó ¼ö ¼³Á¤ ½ÇÆÐ ? $_"
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 36. W-53 ë¡œì»¬ ë¡œê·¸ì˜¨ í—ˆìš© ê¶Œí•œ ì œí•œ (Administrators, IIS_IUSRS ê·¸ë£¹)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 36. W-53 ·ÎÄÃ ·Î±×¿Â Çã¿ë ±ÇÇÑ Á¦ÇÑ (Administrators, IIS_IUSRS ±×·ì)
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 try {
     $cfgPath = "$env:TEMP\W53.inf"
     $dbPath  = "$env:TEMP\W53.sdb"
 
     # SID: *S-1-5-32-544 = Administrators
-    # SID: *S-1-5-32-568 = IIS_IUSRS ê·¸ë£¹
+    # SID: *S-1-5-32-568 = IIS_IUSRS ±×·ì
     $sids = '*S-1-5-32-544,*S-1-5-32-568'
 
     secedit /export /cfg $cfgPath /areas USER_RIGHTS | Out-Null
 
-    # SeInteractiveLogonRight ê°’ì„ ê°•ì œë¡œ ì§€ì •ëœ SIDë¡œ ì„¤ì •
+    # SeInteractiveLogonRight °ªÀ» °­Á¦·Î ÁöÁ¤µÈ SID·Î ¼³Á¤
     (Get-Content $cfgPath) `
         -replace '^SeInteractiveLogonRight\s*=.*', "SeInteractiveLogonRight = $sids" |
     Set-Content $cfgPath -Encoding Unicode
 
-    # ì •ì±… ì ìš©
+    # Á¤Ã¥ Àû¿ë
     secedit /configure /db $dbPath /cfg $cfgPath /areas USER_RIGHTS | Out-Null
 
     Remove-Item $cfgPath,$dbPath -Force
-    Write-OK "W-53: ë¡œì»¬ ë¡œê·¸ì˜¨ í—ˆìš©ì„ Administrators, IIS_IUSRSë¡œ ì œí•œí•¨"
+    Write-OK "W-53: ·ÎÄÃ ·Î±×¿Â Çã¿ëÀ» Administrators, IIS_IUSRS·Î Á¦ÇÑÇÔ"
 }
 catch {
-    Write-Err "W-53: ì‹¤íŒ¨ ? $_"
+    Write-Err "W-53: ½ÇÆÐ ? $_"
 }
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# 38 . ë§ˆë¬´ë¦¬
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+# 38 . ¸¶¹«¸®
+# ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 $warningMsg = @"
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-? [ì£¼ì˜] ì¼ë¶€ ë³´ì•ˆ ì„¤ì •ì€ ì„œë²„ì˜ ì‹¤ì œ ìš©ë„ì— ë”°ë¼
-   ì„œë¹„ìŠ¤ ìš´ì˜ì— ì˜í–¥ì„ ì¤„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+? [ÁÖÀÇ] ÀÏºÎ º¸¾È ¼³Á¤Àº ¼­¹öÀÇ ½ÇÁ¦ ¿ëµµ¿¡ µû¶ó
+   ¼­ºñ½º ¿î¿µ¿¡ ¿µÇâÀ» ÁÙ ¼ö ÀÖ½À´Ï´Ù.
 
- 01. W?01 Administrator ê³„ì • ì´ë¦„ ë³€ê²½
-   - ê¸°ë³¸ ê´€ë¦¬ìž ê³„ì • ì´ë¦„ì´ [$NewAdminName] ìœ¼ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.
-   - ì´í›„ ë¡œê·¸ì¸ ë˜ëŠ” ìŠ¤í¬ë¦½íŠ¸ ì‹¤í–‰ ì‹œ ê³„ì •ëª…ì„ ìƒˆ ì´ë¦„ìœ¼ë¡œ ì‚¬ìš©í•˜ì„¸ìš”.
+ 01. W?01 Administrator °èÁ¤ ÀÌ¸§ º¯°æ
+   - ±âº» °ü¸®ÀÚ °èÁ¤ ÀÌ¸§ÀÌ [$NewAdminName] À¸·Î º¯°æµÇ¾ú½À´Ï´Ù.
+   - ÀÌÈÄ ·Î±×ÀÎ ¶Ç´Â ½ºÅ©¸³Æ® ½ÇÇà ½Ã °èÁ¤¸íÀ» »õ ÀÌ¸§À¸·Î »ç¿ëÇÏ¼¼¿ä.
 
- 26. W?74 ì„¸ì…˜ ìœ íœ´ 15ë¶„ í›„ ìžë™ ì¢…ë£Œ
-   - í˜„ìž¬ ê°’: 15ë¶„
-   - íŒŒì¼ ê³µìœ , ìž¥ì‹œê°„ ì„¸ì…˜ ìœ ì§€ê°€ í•„ìš”í•œ ì„œë²„ì—ì„œëŠ”
-     ì ‘ì† ëŠê¹€, íŒŒì¼ ì €ìž¥ ì˜¤ë¥˜ê°€ ë°œìƒí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
-   - ì„¸ì…˜ ìœ ì§€ê°€ í•„ìš”í•˜ë©´ ì•„ëž˜ ëª…ë ¹ìœ¼ë¡œ ì„¤ì • ë³µì›ì´ ê°€ëŠ¥í•©ë‹ˆë‹¤.
+ 26. W?74 ¼¼¼Ç À¯ÈÞ 15ºÐ ÈÄ ÀÚµ¿ Á¾·á
+   - ÇöÀç °ª: 15ºÐ
+   - ÆÄÀÏ °øÀ¯, Àå½Ã°£ ¼¼¼Ç À¯Áö°¡ ÇÊ¿äÇÑ ¼­¹ö¿¡¼­´Â
+     Á¢¼Ó ²÷±è, ÆÄÀÏ ÀúÀå ¿À·ù°¡ ¹ß»ýÇÒ ¼ö ÀÖ½À´Ï´Ù.
+   - ¼¼¼Ç À¯Áö°¡ ÇÊ¿äÇÏ¸é ¾Æ·¡ ¸í·ÉÀ¸·Î ¼³Á¤ º¹¿øÀÌ °¡´ÉÇÕ´Ï´Ù.
      Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Services\LanManServer\Parameters' -Name 'AutoDisconnect' -Value -1
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 "@
 
-Write-Warn $warningMsg          # ë…¸ëž€ìƒ‰ ê²½ê³  ì¶œë ¥
-Write-Info ""                  # ë¹ˆ ì¤„ (ì¼ê´€ëœ ì¶œë ¥ í•¨ìˆ˜ ì‚¬ìš©)
-Write-Info "ê³„ì†í•˜ë ¤ë©´ [Enter] í‚¤ë¥¼ ëˆ„ë¥´ì„¸ìš”."
+Write-Warn $warningMsg          # ³ë¶õ»ö °æ°í Ãâ·Â
+Write-Info ""                  # ºó ÁÙ (ÀÏ°üµÈ Ãâ·Â ÇÔ¼ö »ç¿ë)
+Write-Info "°è¼ÓÇÏ·Á¸é [Enter] Å°¸¦ ´©¸£¼¼¿ä."
 
 [void][Console]::ReadLine()
