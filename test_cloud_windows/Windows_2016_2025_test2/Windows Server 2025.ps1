@@ -14,7 +14,6 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 # 0. 사용자 조정 파라미터
 # ──────────────────────────────────────────────────────────
 $NewAdminName   = 'Administrator'                   # W?01 administrartor 계정 변경 될 이름
-$Lockout        = @{Threshold = 5; Duration = 60; Window = 60}   # W?04, W?47 패스워드 5회 실패시 60분 잠금
 $AccountWhite   = @($NewAdminName,'Guest','WDAGUtilityAccount','DefaultAccount') # W?03 항목에서 삭제 하지 않을 계정
 $BlockServices  = @('SNMP','SNMPTRAP','Telnet','Fax','TlntSvr','TrkWks','TrkSvr','Spooler') # W?09 + W?60/63/65 항목에서 비활성화될 서비스
 $ExtraBlockSvc  = @('DNS')   # W?09 + W?60/63/65 DNS 서버나 도메인 컨트롤러 사용 할 경우 제외
