@@ -33,7 +33,7 @@ try {
 } catch { Write-Err "W-02: 실패 ? $_" }
 
 # ──────────────────────────────────────────────────────────
-# 5. W?03 불필요 로컬 계정 비활성화 (화이트리스트)
+# 5. W-03 불필요 로컬 계정 비활성화 (화이트리스트)
 # ──────────────────────────────────────────────────────────
 foreach ($u in Get-LocalUser) {
     if ($AccountWhite -notcontains $u.Name) {
@@ -47,7 +47,7 @@ foreach ($u in Get-LocalUser) {
 }
 
 # ──────────────────────────────────────────────────────────
-# 7. W?05 가역적 암호 저장 금지
+# 7. W-05 가역적 암호 저장 금지
 # ──────────────────────────────────────────────────────────
 Import-Module Microsoft.PowerShell.LocalAccounts   # 필요 시 모듈 로드
 
@@ -495,24 +495,7 @@ Set-ItemProperty $pr AddPrinterDrivers 0
 } catch { Write-Err "W-73: 실패 ? $_" }
 
 # ──────────────────────────────────────────────────────────
-# 26. W?74 세션 유휴 15분 후 자동 종료
-#  ──────────────────────────────────────────────────────────
-
-try {
-    $srv = 'HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters'
-    if (-not (Test-Path $srv)) {
-        New-Item -Path $srv | Out-Null
-    }
-    Set-ItemProperty -Path $srv -Name 'EnableForcedLogoff' -Value 1 -Type DWord -Force
-    Set-ItemProperty -Path $srv -Name 'AutoDisconnect' -Value 15 -Type DWord -Force
-    Write-OK "W-74: 세션 유휴 15분 후 자동 종료"
-} catch {
-    Write-Err "W-74: 실패 ? $_"
-}
-
-
-# ──────────────────────────────────────────────────────────
-# 27. W?75 경고 배너
+# 27. W-75 경고 배너
 # ──────────────────────────────────────────────────────────
 try {
     $cap="경고: 무단 접속 금지"
@@ -524,7 +507,7 @@ try {
 } catch { Write-Err "W-75: 실패 ? $_" }
 
 # ──────────────────────────────────────────────────────────
-# 28. W?76 사용자 홈 디렉터리 Everyone 권한 제거 + $NewAdminName 권한 부여
+# 28. W-76 사용자 홈 디렉터리 Everyone 권한 제거 + $NewAdminName 권한 부여
 # ──────────────────────────────────────────────────────────
 try {
     $Skip = @('All Users','Default','Default User','Public','DefaultAppPool','MSSQL','defaultuser0')
@@ -546,7 +529,7 @@ catch {
 }
 
 # ──────────────────────────────────────────────────────────
-# 29. W?77 LAN Manager 인증 수준 3 (CIS 최신 권장은 5 → 필요 시 수정)
+# 29. W-77 LAN Manager 인증 수준 3 (CIS 최신 권장은 5 → 필요 시 수정)
 # ──────────────────────────────────────────────────────────
 try {
     $lsa='HKLM:\SYSTEM\CurrentControlSet\Control\Lsa'
@@ -555,7 +538,7 @@ try {
 } catch { Write-Err "W-77: 실패 ? $_" }
 
 # ──────────────────────────────────────────────────────────
-# 30. W?78 보안 채널 데이터 서명·암호화
+# 30. W-78 보안 채널 데이터 서명·암호화
 # ──────────────────────────────────────────────────────────
 try {
     $nlg = 'HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters'
@@ -695,21 +678,17 @@ catch {
 # ──────────────────────────────────────────────────────────
 $warningMsg = @"
 ────────────────────────────────────────────
-? [주의] 일부 보안 설정은 서버의 실제 용도에 따라
+[주의] 일부 보안 설정은 서버의 실제 용도에 따라
    서비스 운영에 영향을 줄 수 있습니다.
 
- 01. W?01 Administrator 계정 이름 변경
+ 01. W-01 Administrator 계정 이름 변경
    - 기본 관리자 계정 이름이 [$NewAdminName] 으로 변경되었습니다.
    - 이후 로그인 또는 스크립트 실행 시 계정명을 새 이름으로 사용하세요.
 
- 26. W?74 세션 유휴 15분 후 자동 종료
-   - 현재 값: 15분
-   - 파일 공유, 장시간 세션 유지가 필요한 서버에서는
-     접속 끊김, 파일 저장 오류가 발생할 수 있습니다.
-   - 세션 유지가 필요하면 아래 명령으로 설정 복원이 가능합니다.
-     Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Services\LanManServer\Parameters' -Name 'AutoDisconnect' -Value -1
+
 ────────────────────────────────────────────
 "@
 
 Write-Warn $warningMsg          # 노란색 경고 출력
 Write-Info ""                  # 빈 줄 (일관된 출력 함수 사용)
+
