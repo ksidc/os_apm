@@ -72,6 +72,7 @@ if errorlevel 2 (
   exit /b 0
 )
 
-shutdown /r /t 30 /c "Windows Server 2012 보안 설정 적용 ? 30초 후 자동 재부팅"
+shutdown /r /t 30 /c "Windows Server 2012 보안 설정 적용 - 30초 후 자동 재부팅"
 exit /b 0
+
 
