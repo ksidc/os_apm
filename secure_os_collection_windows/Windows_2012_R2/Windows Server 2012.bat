@@ -44,7 +44,7 @@ if "%OLDPOLICY%"=="" set "OLDPOLICY=Undefined"
 
 :: PowerShell 스크립트 실행 (정책 변경 없이 Bypass 사용)
 set "PS1PATH=%~dp0Windows Server 2012.ps1"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%PS1PATH%'"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$PSDefaultParameterValues['*:Encoding']='utf8'; . '%PS1PATH%'"
 set "PS_ERR=%errorlevel%"
 
 :: 실행정책 복원
@@ -74,3 +74,4 @@ if errorlevel 2 (
 
 shutdown /r /t 30 /c "Windows Server 2012 보안 설정 적용 ? 30초 후 자동 재부팅"
 exit /b 0
+
