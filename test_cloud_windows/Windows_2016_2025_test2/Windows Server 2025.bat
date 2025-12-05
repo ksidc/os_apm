@@ -53,7 +53,7 @@ for /f "delims=" %%a in ('
 if "%OLDPOLICY%"=="" set "OLDPOLICY=Undefined"
 
 :: PowerShell 스크립트 실행 (정책 변경 없이 Bypass 사용)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windows Server 2025.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$PSDefaultParameterValues['*:Encoding']='utf8'; . '%~dp0Windows Server 2025.ps1'"
 set "PS_ERR=%errorlevel%"
 
 :: 실행정책 복원
@@ -76,3 +76,4 @@ echo [안내] 보안 설정 적용이 완료되었습니다. (실행정책: %OLD
 echo 재부팅이 필요한 항목이 포함되어 있습니다.
 
 exit /b 0
+
