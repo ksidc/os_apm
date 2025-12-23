@@ -18,7 +18,6 @@ install_packages() {
 
 configure_ntp() {
     log_info "configure_ntp 시작"
-    backup_file /etc/chrony.conf /etc/cron.d/chrony_makestep
     dnf install -y chrony || { log_error "configure_ntp" "chrony 설치 실패"; exit 1; }
     log_info "chrony 설치 성공"
     systemctl enable --now chronyd || { log_error "configure_ntp" "chronyd 시작 실패"; exit 1; }
@@ -38,7 +37,6 @@ configure_ntp() {
 
 configure_history_timeout() {
     log_info "configure_history_timeout 시작"
-    backup_file /etc/profile
     grep -q HISTTIMEFORMAT /etc/profile || echo 'export HISTTIMEFORMAT="%Y-%m-%d[%H:%M:%S] "' >> /etc/profile
     grep -q TMOUT /etc/profile || echo 'export TMOUT=600' >> /etc/profile
     log_info "히스토리 및 타임아웃 설정 완료"
@@ -46,7 +44,6 @@ configure_history_timeout() {
 
 configure_etc_perms() {
     log_info "configure_etc_perms 시작"
-    backup_file /etc/passwd /etc/shadow /etc/hosts /usr/bin/su
     set_file_perms /etc/passwd root:root 644
     set_file_perms /etc/shadow root:root 400
     set_file_perms /etc/hosts root:root 600
@@ -66,7 +63,6 @@ configure_etc_perms() {
 
 configure_file_permissions() {
     log_info "configure_file_permissions 시작"
-    backup_file /sbin/unix_chkpwd /usr/bin/newgrp /usr/bin/perl /usr/bin/screen /usr/bin/wget /usr/bin/curl
     chmod -s /sbin/unix_chkpwd || log_error "configure_file_permissions" "unix_chkpwd setuid 제거 실패"
     chmod -s /usr/bin/newgrp || log_error "configure_file_permissions" "newgrp setuid 제거 실패"
     for f in /usr/bin/perl /usr/bin/screen /usr/bin/wget /usr/bin/curl; do
@@ -77,7 +73,6 @@ configure_file_permissions() {
 
 configure_motd() {
     log_info "configure_motd 시작"
-    backup_file /etc/motd
     cat <<'EOF' > /etc/motd
 "********************************************************************
 *                                                                  *
@@ -101,7 +96,6 @@ EOF
 
 configure_bash_vim() {
     log_info "configure_bash_vim 시작"
-    backup_file /root/.bashrc /root/.vimrc
     for a in "alias vi='vim'" "alias grep='grep --color=auto'" "alias ll='ls -alF --color=tty'"; do
         grep -qF "$a" /root/.bashrc || echo "$a" >> /root/.bashrc
     done
@@ -147,7 +141,6 @@ step2_change_ssh_port() {
         fi
     fi
 
-    backup_file /etc/ssh/sshd_config
     sed -i "/^#Port /c\Port $new_port" /etc/ssh/sshd_config
     sed -i "/^Port /c\Port $new_port" /etc/ssh/sshd_config
     sshd -t || { log_error "change_ssh_port" "SSHD 설정 파일 오류"; exit 1; }
@@ -159,7 +152,6 @@ step2_change_ssh_port() {
 
 configure_sysctl() {
     log_info "configure_sysctl 시작"
-    backup_file /etc/sysctl.conf
     cat <<EOF > /etc/sysctl.conf
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv4.icmp_echo_ignore_broadcasts = 1
@@ -179,7 +171,6 @@ EOF
 
 configure_limits() {
     log_info "configure_limits 시작"
-    backup_file /etc/security/limits.conf
     cat <<EOF > /etc/security/limits.conf
 * soft nofile 61200
 * hard nofile 61200
@@ -191,7 +182,6 @@ EOF
 
 configure_rc_local() {
     log_info "configure_rc_local 시작"
-    backup_file /etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local || log_error "rc_local" "chmod 실패"
     systemctl enable rc-local &>/dev/null || log_error "rc_local" "enable 실패"
     log_info "rc.local 활성화 완료"
@@ -199,7 +189,6 @@ configure_rc_local() {
 
 configure_rsyslog() {
     log_info "configure_rsyslog 시작"
-    backup_file /etc/rsyslog.conf
     chown root:root /etc/rsyslog.conf \
         || log_error "configure_rsyslog" "/etc/rsyslog.conf 소유자 설정 실패"
     chmod 640 /etc/rsyslog.conf \
@@ -212,7 +201,6 @@ configure_rsyslog() {
 
 disable_selinux() {
     log_info "disable_selinux 시작"
-    backup_file /etc/selinux/config
     setenforce 0 || log_error "selinux" "setenforce 실패"
     sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
     log_info "SELinux 비활성화 완료"

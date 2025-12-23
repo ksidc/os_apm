@@ -16,7 +16,6 @@ remove_unneeded_users() {
 
 configure_ftp_shell() {
     log_info "configure_ftp_shell 시작"
-    backup_file /etc/passwd
     if getent passwd ftp | grep -q '/sbin/nologin'; then
         sed -i '/^ftp:/s#/sbin/nologin#/bin/false#' /etc/passwd \
             || { log_error "configure_ftp_shell" "/etc/passwd 수정 실패"; return 1; }
@@ -76,7 +75,6 @@ set_password_policy() {
             chage -l "$user" | grep -E 'Maximum|Minimum|Warning' >> "$LOG_FILE"
         done
 
-        backup_file /etc/login.defs
         sed -i '/^PASS_MAX_DAYS/d' /etc/login.defs
         sed -i '/^PASS_MIN_LEN/d' /etc/login.defs
         sed -i '/^PASS_MIN_DAYS/d' /etc/login.defs
@@ -97,7 +95,6 @@ set_password_policy() {
 
 create_fallback_and_restrict() {
     log_info "create_fallback_and_restrict 시작"
-    backup_file /etc/passwd /etc/shadow /etc/ssh/sshd_config /etc/pam.d/su
     local existing
     existing=$(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd 2>/dev/null) || { 
         log_error "create_fallback_and_restrict" "기존 계정 조회 실패"
@@ -158,7 +155,6 @@ create_fallback_and_restrict() {
     local dropin_dir="/etc/ssh/sshd_config.d"
     local dropin_file="$dropin_dir/01-permitrootlogin.conf"
     if mkdir -p "$dropin_dir"; then
-        [ -f "$dropin_file" ] && backup_file "$dropin_file"
         cat <<'EOF' > "$dropin_file"
 PermitRootLogin no
 EOF
@@ -177,7 +173,6 @@ EOF
 
 configure_pwquality() {
     log_info "configure_pwquality 시작"
-    backup_file /etc/security/pwquality.conf
     sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok/d' /etc/security/pwquality.conf
     cat <<EOF >> /etc/security/pwquality.conf
 lcredit=-1
@@ -225,7 +220,6 @@ configure_pam_lockout() {
 configure_su_restriction() {
     log_info "configure_su_restriction 시작"
     local su_file="/etc/pam.d/su"
-    backup_file "$su_file"
     if ! getent group wheel >/dev/null; then
         groupadd wheel && log_info "wheel group 생성" \
             || { log_error "configure_su_restriction" "wheel group 생성 실패"; return 1; }

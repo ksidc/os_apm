@@ -10,7 +10,6 @@ NTP_SERVER=${NTP_SERVER:-"kr.pool.ntp.org"}
 RSYSLOG_SERVER=${RSYSLOG_SERVER:-"1.224.163.4"}
 MIN_PASSWORD_LENGTH=${MIN_PASSWORD_LENGTH:-8}
 SSH_PORT=${SSH_PORT:-38371}
-BACKUP_DIR="/usr/local/src/scripts_org"
 LOG_DIR="/usr/local/src/secure_os_collection/logs"
 LOG_FILE="$LOG_DIR/go_$(date +%Y%m%d_%H%M%S).log"
 RESULT_FILE="$LOG_DIR/result_$(date +%Y%m%d_%H%M%S).log"
@@ -112,7 +111,6 @@ SUMMARY+="방화벽 설정: 적용됨\n"
 SUMMARY+="SELinux 비활성화: 적용됨\n"
 SUMMARY+="sysctl/limits 튜닝: 적용됨\n"
 SUMMARY+="서비스 비활성화: 적용됨 (대상: ${SERVICES_DISABLED:-없음})\n"
-SUMMARY+="백업 위치: $BACKUP_DIR (롤백: bash /usr/local/src/secure_os_collection/r9/rollback.sh 실행)\n"
 # 요약 출력 및 저장
 echo -e "\n=== 실행 결과 요약 ===\n$SUMMARY"
 echo -e "$SUMMARY" > "$RESULT_FILE"
@@ -121,10 +119,56 @@ log_info "결과 요약 저장: $RESULT_FILE"
 # 리부팅 확인
 log_info "리부팅 확인 시작"
 read -r -p "시스템을 지금 리부팅하시겠습니까? (Y/N): " reboot < /dev/tty
+
+# 로그 파일 출력 중지 (디렉토리 삭제 전)
+LOG_FILE=/dev/null
+RESULT_FILE=/dev/null
+
+# 작업 흔적 제거
+echo -e "\n=== 작업 흔적 제거 중 ==="
+
+# 1. zip 파일 및 스크립트 디렉토리 삭제
+echo "  → 스크립트 및 zip 파일 삭제 중..."
+SCRIPT_DIR="/usr/local/src/secure_os_collection"
+ZIP_FILE="/usr/local/src/secure_os_collection.zip"
+[ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
+[ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
+
+# 3. 임시 파일 정리
+rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
+
+# 4. 모든 사용자 히스토리 삭제
+echo "  → 명령 히스토리 삭제 중..."
+rm -f /root/.bash_history /root/.history
+printf 'history -c\nhistory -w\n' > /root/.bash_logout
+
+for user_home in /home/*; do
+    [ -d "$user_home" ] || continue
+    rm -f "$user_home/.bash_history" "$user_home/.history"
+    printf 'history -c\nhistory -w\n' > "$user_home/.bash_logout"
+    chown "$(basename "$user_home")":"$(basename "$user_home")" "$user_home/.bash_logout" 2>/dev/null || true
+    chmod 600 "$user_home/.bash_logout" 2>/dev/null || true
+done
+
+echo "  ✓ 모든 작업 흔적 제거 완료"
+
+# 실행 셸 히스토리도 즉시 비우고 기록을 끔
+history -c 2>/dev/null || true
+history -w 2>/dev/null || true
+unset HISTFILE
+sleep 3
+
+# 리부팅 또는 종료
+action_cmd="kill -9 $$"
+action_msg=$'  → 설정 적용을 위해 시스템 리부팅을 권장합니다.\n  → 3초 후 로그아웃됩니다...'
+wait_seconds=3
+
 if [[ "$reboot" =~ ^[Yy]$ ]]; then
-    log_info "사용자 선택: 리부팅"
-    systemctl reboot
-else
-    log_info "사용자 선택: 리부팅 생략"
-    echo "설정 적용을 위해 시스템 리부팅을 권장합니다."
+    action_cmd="init 6"
+    action_msg="  → 시스템을 재부팅합니다..."
+    wait_seconds=1
 fi
+
+echo -e "$action_msg"
+sleep "$wait_seconds"
+eval "$action_cmd"
