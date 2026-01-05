@@ -17,7 +17,6 @@ SERVICES_DISABLED=""
 configure_rsyslog() {
   log_info "rsyslog 원격 전송 설정"
   if dpkg -s rsyslog >/dev/null 2>&1; then
-    backup_file /etc/rsyslog.conf
     chown root:root /etc/rsyslog.conf
     chmod 640 /etc/rsyslog.conf
     if ! grep -qxF "*.* @$RSYSLOG_SERVER" /etc/rsyslog.conf; then
@@ -31,7 +30,6 @@ configure_rsyslog() {
 
 disable_rhosts_hosts_equiv() {
   log_info "rhosts 및 hosts.equiv 제거"
-  backup_file /etc/hosts.equiv "$HOME/.rhosts"
   rm -f /etc/hosts.equiv "$HOME/.rhosts"
 }
 
@@ -46,7 +44,6 @@ disable_finger() {
 disable_anonymous_ftp() {
   log_info "익명 FTP 접근 차단"
   if dpkg -s vsftpd >/dev/null 2>&1; then
-    backup_file /etc/vsftpd.conf
     if grep -q '^anonymous_enable=' /etc/vsftpd.conf; then
       sed -i 's/^anonymous_enable=.*/anonymous_enable=NO/' /etc/vsftpd.conf
     else
@@ -73,7 +70,6 @@ configure_cron_permissions() {
   local file
   for file in /etc/cron.allow /etc/cron.deny; do
     if [[ -e "$file" ]]; then
-      backup_file "$file"
       set_file_perms "$file" root:root 640
     fi
   done
@@ -109,7 +105,6 @@ disable_nis() {
 configure_ftp_shell() {
   log_info "ftp 계정 기본 셸 변경"
   if getent passwd ftp >/dev/null; then
-    backup_file /etc/passwd
     sed -i 's#^\(ftp:.*:\)\(/usr\)\?/sbin/nologin#\1/bin/false#' /etc/passwd
   fi
 }
@@ -124,7 +119,6 @@ disable_tftp_talk() {
     fi
   done
   if [[ -f /etc/inetd.conf ]]; then
-    backup_file /etc/inetd.conf
     rm -f /etc/inetd.conf
   fi
 }

@@ -44,26 +44,8 @@ command_exists() {
 }
 
 # ------------------------------------------------------------------------------
-# Backup and permissions
+# Permissions
 # ------------------------------------------------------------------------------
-
-ensure_backup_dir() {
-  mkdir -p "$BACKUP_DIR"
-  chmod 700 "$BACKUP_DIR"
-}
-
-backup_file() {
-  ensure_backup_dir
-  local src
-  for src in "$@"; do
-    if [[ -e "$src" ]]; then
-      cp "$src" "${BACKUP_DIR}/$(basename "$src").bak_$(date +%F_%T)"
-      log_info "Backed up $src to $BACKUP_DIR"
-    else
-      log_warn "Backup skipped; file not found: $src"
-    fi
-  done
-}
 
 set_file_perms() {
   local file="$1" owner="$2" perms="$3"
@@ -124,25 +106,4 @@ prompt_yes_no() {
   done
 }
 
-# ------------------------------------------------------------------------------
-# Config loader (no /etc/hardening.conf default)
-# ------------------------------------------------------------------------------
-
-load_external_config() {
-  local candidate
-
-  if [[ -n "${CONFIG_FILE:-}" ]] && [[ -r "$CONFIG_FILE" ]]; then
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
-    log_info "Loaded configuration from $CONFIG_FILE"
-    return 0
-  fi
-
-  candidate="${SCRIPT_DIR}/secure_ubuntu_20.conf"
-  if [[ -r "$candidate" ]]; then
-    # shellcheck source=/dev/null
-    source "$candidate"
-    log_info "Loaded default configuration from $candidate"
-  fi
-}
 

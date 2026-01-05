@@ -11,20 +11,24 @@ if [[ -n "${SECURE_OS_ACCOUNTS_LOADED:-}" ]]; then
 fi
 readonly SECURE_OS_ACCOUNTS_LOADED=1
 
-ROOT_PASSWORD_CHANGED="미적용"
 PASSWORD_POLICY_SUMMARY="미적용"
 CREATED_USER="미생성"
+DELETED_USERS=""
+NEW_SSH_PORT="미변경 (기본 22)"
 
 remove_unneeded_users() {
   log_info "remove_unneeded_users 시작"
-  local user
-  for user in lp games; do
+  local user output
+  # lp, games, sync는 시스템 기본 계정이므로 삭제 대상에서 제외
+  for user in ftp shutdown halt; do
     if id "$user" >/dev/null 2>&1; then
-      if output="$(userdel -r "$user" 2>&1)"; then
+      output="$(userdel -r "$user" 2>&1)" || true
+      if ! id "$user" >/dev/null 2>&1; then
         DELETED_USERS+=" ${user}"
         log_info "불필요한 계정 '$user'를 삭제했습니다."
+        [[ -n "$output" ]] && log_info "userdel 출력: $output"
       else
-        log_warn "계정 '$user' 삭제 경고: $output"
+        log_warn "계정 '$user' 삭제 실패: $output"
       fi
     else
       log_info "계정 '$user'는 존재하지 않습니다."
@@ -50,7 +54,6 @@ change_root_password() {
   done
 
   if echo "root:${password}" | chpasswd; then
-    ROOT_PASSWORD_CHANGED="적용"
     log_info "root 계정 비밀번호를 변경했습니다."
   else
     log_error "change_root_password" "root 비밀번호 변경 실패"
@@ -79,7 +82,6 @@ change_ssh_port() {
     return 0
   fi
 
-  backup_file "$ssh_config"
   if grep -q '^[[:space:]]*Port[[:space:]]' "$ssh_config"; then
     sed -i -E "s/^[[:space:]]*Port[[:space:]]+.*/Port ${new_port}/" "$ssh_config"
   else
@@ -103,7 +105,7 @@ change_ssh_port() {
 configure_password_policy() {
   log_info "configure_password_policy 시작"
   if ! prompt_yes_no "사용자 비밀번호 만료 정책을 설정할까요?"; then
-    PASSWORD_POLICY_SUMMARY="사용자 선택으로 미적용"
+    PASSWORD_POLICY_SUMMARY="미적용"
     log_info "비밀번호 만료 정책 설정을 건너뛰었습니다."
     return 0
   fi
@@ -124,7 +126,6 @@ configure_password_policy() {
     chage -M "$max_days" -m "$min_days" -W "$warn_days" "$user"
   done
 
-  backup_file /etc/login.defs
   sed -i '/^PASS_MAX_DAYS/d' /etc/login.defs
   sed -i '/^PASS_MIN_DAYS/d' /etc/login.defs
   sed -i '/^PASS_WARN_AGE/d' /etc/login.defs
@@ -136,7 +137,7 @@ PASS_WARN_AGE   $warn_days
 PASS_MIN_LEN    $min_len
 EOF
 
-  PASSWORD_POLICY_SUMMARY="최대 ${max_days}일 / 최소 ${min_days}일 / 경고 ${warn_days}일 / 최소 길이 ${min_len}자"
+  PASSWORD_POLICY_SUMMARY="적용됨 (최대 ${max_days}일, 최소 길이 ${min_len}, 최소 ${min_days}일, 경고 ${warn_days}일)"
   log_info "비밀번호 만료 정책을 적용했습니다."
 }
 
@@ -193,7 +194,6 @@ setup_fallback_account_and_restrict_root() {
   fi
 
   local ssh_config="/etc/ssh/sshd_config"
-  backup_file "$ssh_config"
   if grep -q '^[[:space:]]*PermitRootLogin' "$ssh_config"; then
     sed -i -E 's/^[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' "$ssh_config"
   else
@@ -212,7 +212,6 @@ setup_fallback_account_and_restrict_root() {
 configure_pass_min_length() {
   log_info "configure_pass_min_length 시작"
   local pam_file="/etc/pam.d/common-password"
-  backup_file "$pam_file"
 
   if grep -q 'pam_unix.so' "$pam_file"; then
     if grep -Eq 'pam_unix\.so.*minlen=' "$pam_file"; then
@@ -235,8 +234,6 @@ configure_pam_lockout() {
   local authsucc_line="auth    sufficient pam_faillock.so authsucc deny=3 unlock_time=300"
   local account_line="account required pam_faillock.so"
   local module_found=false
-
-  backup_file "$pam_auth" "$pam_account"
 
   if ! command_exists faillock; then
     log_warn "faillock 명령을 찾지 못했습니다. libpam-modules-bin 패키지 설치를 확인하세요."
@@ -301,7 +298,6 @@ configure_su_restriction() {
   log_info "configure_su_restriction 시작"
   local su_file="/etc/pam.d/su"
   local su_bin="/usr/bin/su"
-  backup_file "$su_file" "$su_bin"
 
   if ! grep -Eq 'auth\s+required\s+pam_wheel.so\s+use_uid\s+group=sudo' "$su_file"; then
     sed -i '/pam_rootok.so/a auth       required   pam_wheel.so use_uid group=sudo' "$su_file"

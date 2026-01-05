@@ -20,7 +20,6 @@ disable_finger() {
 disable_anonymous_ftp() {
     log_info "disable_anonymous_ftp 시작"
     if rpm -q vsftpd &>/dev/null; then
-        backup_file /etc/vsftpd/vsftpd.conf
         if grep -q '^anonymous_enable=NO' /etc/vsftpd/vsftpd.conf; then
             log_info "anonymous FTP 이미 제한됨"
         else
@@ -125,14 +124,13 @@ disable_cockpit() {
 configure_cron_permissions() {
     log_info "configure_cron_permissions 시작"
     for f in /etc/cron.allow /etc/cron.deny; do
-        [ -e "$f" ] && backup_file "$f" && set_file_perms "$f" root:root 640
+        [ -e "$f" ] && set_file_perms "$f" root:root 640
     done
     log_info "cron 접근 제어 파일 권한 설정 완료"
 }
 
 disable_rhosts_hosts_equiv() {
     log_info "disable_rhosts_hosts_equiv 시작"
-    backup_file /etc/hosts.equiv "$HOME/.rhosts"
     rm -f /etc/hosts.equiv "$HOME/.rhosts"
     log_info "hosts.equiv 및 .rhosts 제거"
 }

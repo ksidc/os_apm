@@ -44,26 +44,8 @@ command_exists() {
 }
 
 # ------------------------------------------------------------------------------
-# 백업 및 권한
+# 권한
 # ------------------------------------------------------------------------------
-
-ensure_backup_dir() {
-  mkdir -p "$BACKUP_DIR"
-  chmod 700 "$BACKUP_DIR"
-}
-
-backup_file() {
-  ensure_backup_dir
-  local src
-  for src in "$@"; do
-    if [[ -e "$src" ]]; then
-      cp "$src" "${BACKUP_DIR}/$(basename "$src").bak_$(date +%F_%T)"
-      log_info "백업 완료: $src -> $BACKUP_DIR"
-    else
-      log_warn "백업 생략: $src 파일이 존재하지 않습니다."
-    fi
-  done
-}
 
 set_file_perms() {
   local file="$1" owner="$2" perms="$3"
@@ -124,33 +106,4 @@ prompt_yes_no() {
   done
 }
 
-# ------------------------------------------------------------------------------
-# 외부 설정 로드
-# ------------------------------------------------------------------------------
-
-load_external_config() {
-  local candidate
-
-  if [[ -n "${CONFIG_FILE:-}" ]] && [[ -r "$CONFIG_FILE" ]]; then
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
-    log_info "환경 설정을 불러왔습니다: $CONFIG_FILE"
-    return 0
-  fi
-
-  candidate="${SCRIPT_DIR}/secure_ubuntu_22.conf"
-  if [[ -r "$candidate" ]]; then
-    # shellcheck source=/dev/null
-    source "$candidate"
-    log_info "기본 환경 설정을 불러왔습니다: $candidate"
-    return 0
-  fi
-
-  candidate="/etc/hardening.conf"
-  if [[ -r "$candidate" ]]; then
-    # shellcheck source=/dev/null
-    source "$candidate"
-    log_info "시스템 환경 설정을 불러왔습니다: $candidate"
-  fi
-}
 

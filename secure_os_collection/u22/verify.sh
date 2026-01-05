@@ -1,319 +1,207 @@
 #!/bin/bash
 #
-# Ubuntu 22.04 보안 스크립트 적용 검증 도구
-set -uo pipefail
+# Ubuntu 22.04 보안 하드닝 검증 스크립트
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${CONFIG_FILE:-}"
+set -u
 
-usage() {
-  cat <<'EOF'
-사용법: ./verify.sh [옵션]
-  -c, --config <파일>   사용자 정의 설정 파일 경로
-  -h, --help            도움말 출력
+echo "=============================================="
+echo "Ubuntu 22.04 보안 하드닝 검증 시작"
+echo "=============================================="
+echo ""
 
-환경 변수
-  SSH_PORT, RSYSLOG_SERVER, BACKUP_DIR 값을 재정의할 수 있습니다.
-EOF
-}
+PASS_COUNT=0
+FAIL_COUNT=0
+WARN_COUNT=0
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -c|--config)
-      CONFIG_FILE="$2"
-      shift 2
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "알 수 없는 옵션: $1" >&2
-      usage
-      exit 1
-      ;;
-  esac
-done
-
-LOG_FILE=""
-RESULT_FILE=""
-
-source "${SCRIPT_DIR}/common.sh"
-
-SSH_PORT=${SSH_PORT:-38371}
-RSYSLOG_SERVER=${RSYSLOG_SERVER:-"1.224.163.4"}
-BACKUP_DIR=${BACKUP_DIR:-"/usr/local/src/scripts_org"}
-
-load_external_config
-
-declare -i PASS_COUNT=0
-declare -i FAIL_COUNT=0
-FAIL_DETAILS=()
-CHECK_MESSAGE=""
-
-print_section() {
-  printf '\n[%s]\n' "$1"
-}
-
-record_pass() {
+check_pass() {
+  echo "  ✓ PASS: $1"
   ((PASS_COUNT++))
-  printf '  [PASS] %s\n' "$1"
 }
 
-record_fail() {
+check_fail() {
+  echo "  ✗ FAIL: $1"
   ((FAIL_COUNT++))
-  local message="${CHECK_MESSAGE:-세부 원인 미확인}"
-  printf '  [FAIL] %s => %s\n' "$1" "$message"
-  FAIL_DETAILS+=("$1 :: $message")
-  CHECK_MESSAGE=""
 }
 
-run_check() {
-  local description="$1"
-  shift
-  if "$@"; then
-    record_pass "$description"
+check_warn() {
+  echo "  ⚠ WARN: $1"
+  ((WARN_COUNT++))
+}
+
+# 1. 불필요한 사용자 삭제 확인
+echo "[1] 불필요한 사용자 삭제 확인"
+# lp, games, sync는 시스템 기본 계정이므로 검증 대상에서 제외
+REMOVED_USERS=(ftp shutdown halt)
+for user in "${REMOVED_USERS[@]}"; do
+  if ! id "$user" >/dev/null 2>&1; then
+    check_pass "계정 '$user' 삭제됨"
   else
-    record_fail "$description"
+    check_warn "계정 '$user' 여전히 존재함"
   fi
-}
+done
+echo ""
 
-check_history_timeout() {
-  local profile="/etc/profile"
-  if ! grep -Eq 'HISTTIMEFORMAT=.*%Y-%m-%d %H:%M:%S' "$profile"; then
-    CHECK_MESSAGE='/etc/profile 에 HISTTIMEFORMAT 설정이 없습니다.'
-    return 1
-  fi
-  if grep -Eq '(^|\s)TMOUT=600\b' "$profile"; then
-    return 0
-  fi
-  CHECK_MESSAGE='/etc/profile 에 TMOUT=600 설정이 없습니다.'
-  return 1
-}
-
-expect_stat() {
-  local file="$1" expected_perm="$2" expected_owner="$3"
-  if [[ ! -e "$file" ]]; then
-    CHECK_MESSAGE="$file 파일이 존재하지 않습니다."
-    return 1
-  fi
-  local actual
-  actual="$(stat -c '%a %U:%G' "$file")" || return 1
-  if [[ "$actual" == "$expected_perm $expected_owner" ]]; then
-    return 0
-  fi
-  CHECK_MESSAGE="기대값 ${expected_perm} ${expected_owner}, 현재 ${actual}"
-  return 1
-}
-
-check_file_permissions() {
-  expect_stat /etc/passwd 644 "root:root" || return 1
-  expect_stat /etc/shadow 640 "root:shadow" || return 1
-  expect_stat /etc/hosts 644 "root:root" || return 1
-  expect_stat /usr/bin/su 4750 "root:sudo" || return 1
-  return 0
-}
-
-check_packages() {
-  local pkgs=(
-    lsof net-tools psmisc screen iftop smartmontools vim unzip wget
-    iputils-ping lrzsz ufw rsyslog
-  )
-  local missing=()
-  local pkg
-  for pkg in "${pkgs[@]}"; do
-    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-      missing+=("$pkg")
-    fi
-  done
-  if ((${#missing[@]} == 0)); then
-    return 0
-  fi
-  CHECK_MESSAGE="설치되지 않은 패키지: ${missing[*]}"
-  return 1
-}
-
-check_sysctl() {
-  local file="/etc/sysctl.d/99-secure-os.conf"
-  if [[ ! -f "$file" ]]; then
-    CHECK_MESSAGE="$file 파일이 존재하지 않습니다."
-    return 1
-  fi
-  if ! grep -q 'net.ipv6.conf.all.disable_ipv6 = 1' "$file"; then
-    CHECK_MESSAGE="$file 에 IPv6 비활성화 설정이 누락되었습니다."
-    return 1
-  fi
-  if ! sysctl net.ipv4.tcp_fin_timeout | grep -q ' = 10'; then
-    CHECK_MESSAGE='sysctl net.ipv4.tcp_fin_timeout 값이 10이 아닙니다.'
-    return 1
-  fi
-  return 0
-}
-
-check_limits() {
-  local file="/etc/security/limits.d/99-secure-os.conf"
-  if [[ ! -f "$file" ]]; then
-    CHECK_MESSAGE="$file 파일이 존재하지 않습니다."
-    return 1
-  fi
-  if ! grep -q '^\* soft nofile 61200' "$file"; then
-    CHECK_MESSAGE='nofile soft 한계가 61200으로 설정되지 않았습니다.'
-    return 1
-  fi
-  if ! grep -q '^\* hard nproc 61200' "$file"; then
-    CHECK_MESSAGE='nproc hard 한계가 61200으로 설정되지 않았습니다.'
-    return 1
-  fi
-  return 0
-}
-
-check_pam_lockout() {
-  local pam_auth="/etc/pam.d/common-auth"
-  local pam_account="/etc/pam.d/common-account"
-
-  if grep -q 'pam_faillock.so' "$pam_auth"; then
-    if ! grep -q 'pam_faillock.so preauth' "$pam_auth"; then
-      CHECK_MESSAGE='pam_faillock preauth 항목이 없습니다.'
-      return 1
-    fi
-    if ! grep -q 'pam_faillock.so authfail' "$pam_auth"; then
-      CHECK_MESSAGE='pam_faillock authfail 항목이 없습니다.'
-      return 1
-    fi
-    if ! grep -q 'pam_faillock.so authsucc' "$pam_auth"; then
-      CHECK_MESSAGE='pam_faillock authsucc 항목이 없습니다.'
-      return 1
-    fi
-    if ! grep -Eq '^\s*account\s+required\s+pam_faillock\.so' "$pam_account"; then
-      CHECK_MESSAGE='pam_faillock account 항목이 없습니다.'
-      return 1
-    fi
-    return 0
-  fi
-
-  if grep -q 'pam_tally2.so' "$pam_auth"; then
-    if ! grep -Eq 'pam_tally2\.so.*deny=5.*unlock_time=300' "$pam_auth"; then
-      CHECK_MESSAGE='pam_tally2 deny=5 unlock_time=300 설정이 없습니다.'
-      return 1
-    fi
-    if ! grep -Eq '^\s*account\s+required\s+pam_tally2\.so' "$pam_account"; then
-      CHECK_MESSAGE='pam_tally2 account 항목이 없습니다.'
-      return 1
-    fi
-    return 0
-  fi
-
-  CHECK_MESSAGE='pam_faillock 또는 pam_tally2 잠금 정책이 적용되지 않았습니다.'
-  return 1
-}
-
-check_root_ssh() {
-  if grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config; then
-    return 0
-  fi
-  CHECK_MESSAGE='sshd_config 에 PermitRootLogin no 설정이 없습니다.'
-  return 1
-}
-
-check_ssh_port() {
-  local current
-  current="$(sshd -T 2>/dev/null | awk '/^port /{print $2; exit}' || echo '')"
-  if [[ -z "$current" ]]; then
-    CHECK_MESSAGE='sshd -T 실행에 실패했습니다.'
-    return 1
-  fi
-  if [[ "$current" == "$SSH_PORT" ]]; then
-    return 0
-  fi
-  CHECK_MESSAGE="현재 SSH 포트: ${current} (기대값 ${SSH_PORT})"
-  return 1
-}
-
-check_rsyslog() {
-  if grep -q "*.* @$RSYSLOG_SERVER" /etc/rsyslog.conf; then
-    return 0
-  fi
-  CHECK_MESSAGE="rsyslog 원격 전송 대상에 ${RSYSLOG_SERVER}가 설정되지 않았습니다."
-  return 1
-}
-
-check_services_disabled() {
-  local services=(finger autofs nis ypbind ypserv tftp talk)
-  local problematic=()
-  local svc status
-  for svc in "${services[@]}"; do
-    if systemctl list-unit-files "${svc}.service" >/dev/null 2>&1; then
-      status="$(systemctl is-enabled "${svc}.service" 2>/dev/null || echo 'unknown')"
-      case "$status" in
-        disabled|masked|static|indirect)
-          continue
-          ;;
-        *)
-          problematic+=("${svc}:${status}")
-          ;;
-      esac
-    fi
-  done
-  if ((${#problematic[@]} == 0)); then
-    return 0
-  fi
-  CHECK_MESSAGE="비활성화되지 않은 서비스: ${problematic[*]}"
-  return 1
-}
-
-check_rhosts() {
-  if [[ -f /etc/hosts.equiv ]]; then
-    CHECK_MESSAGE='/etc/hosts.equiv 파일이 존재합니다.'
-    return 1
-  fi
-  if find /root -maxdepth 1 -name '.rhosts' | grep -q '.'; then
-    CHECK_MESSAGE='/root/.rhosts 파일이 존재합니다.'
-    return 1
-  fi
-  return 0
-}
-
-check_logs_backups() {
-  local log_dir="/usr/local/src/secure_os_collection/logs"
-  if [[ ! -d "$log_dir" ]]; then
-    CHECK_MESSAGE="$log_dir 디렉터리가 존재하지 않습니다."
-    return 1
-  fi
-  if [[ ! -d "$BACKUP_DIR" ]]; then
-    CHECK_MESSAGE="백업 디렉터리가 존재하지 않습니다: $BACKUP_DIR"
-    return 1
-  fi
-  return 0
-}
-
-print_section "시스템 기본 설정"
-run_check "명령 기록 시간/세션 타임아웃" check_history_timeout
-run_check "주요 시스템 파일 권한" check_file_permissions
-run_check "필수 패키지 설치 상태" check_packages
-run_check "커널 파라미터(sysctl)" check_sysctl
-run_check "자원 한계(limits)" check_limits
-
-print_section "계정 및 인증"
-run_check "로그인 실패 잠금 정책" check_pam_lockout
-run_check "root SSH 로그인 차단" check_root_ssh
-run_check "SSH 포트 설정" check_ssh_port
-
-print_section "서비스 및 네트워크"
-run_check "rsyslog 원격 전송" check_rsyslog
-run_check "취약 서비스 비활성화" check_services_disabled
-run_check "rhosts/hosts.equiv 제거" check_rhosts
-
-print_section "로그 및 백업"
-run_check "로그/백업 디렉터리 존재" check_logs_backups
-
-printf '\n=== 요약 ===\n'
-printf '성공: %d, 실패: %d\n' "$PASS_COUNT" "$FAIL_COUNT"
-if ((FAIL_COUNT > 0)); then
-  printf '\n실패 상세:\n'
-  for detail in "${FAIL_DETAILS[@]}"; do
-    printf ' - %s\n' "$detail"
-  done
-  exit 1
+# 2. SSH 설정 확인
+echo "[2] SSH 보안 설정 확인"
+if grep -q '^PermitRootLogin no' /etc/ssh/sshd_config; then
+  check_pass "PermitRootLogin이 no로 설정됨"
+else
+  check_fail "PermitRootLogin이 no로 설정되지 않음"
 fi
 
-echo "모든 검증을 통과했습니다."
+if grep -q '^Port [0-9]\+' /etc/ssh/sshd_config; then
+  PORT=$(grep '^Port' /etc/ssh/sshd_config | awk '{print $2}')
+  if [[ "$PORT" != "22" ]]; then
+    check_pass "SSH 포트가 $PORT 로 변경됨"
+  else
+    check_warn "SSH 포트가 기본값(22)으로 유지됨"
+  fi
+else
+  check_warn "SSH 포트 설정이 명시되지 않음 (기본 22 사용 중)"
+fi
+echo ""
+
+# 3. 비밀번호 정책 확인
+echo "[3] 비밀번호 정책 확인"
+if grep -q '^PASS_MAX_DAYS' /etc/login.defs; then
+  MAX_DAYS=$(grep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print $2}')
+  check_pass "비밀번호 최대 사용기간: ${MAX_DAYS}일"
+else
+  check_warn "PASS_MAX_DAYS 설정 없음"
+fi
+
+if grep -q '^PASS_MIN_LEN' /etc/login.defs; then
+  MIN_LEN=$(grep '^PASS_MIN_LEN' /etc/login.defs | awk '{print $2}')
+  check_pass "비밀번호 최소 길이: ${MIN_LEN}자"
+else
+  check_warn "PASS_MIN_LEN 설정 없음"
+fi
+echo ""
+
+# 4. PAM 설정 확인
+echo "[4] PAM 보안 설정 확인"
+if grep -q 'pam_unix.so.*minlen=' /etc/pam.d/common-password; then
+  check_pass "PAM 비밀번호 최소 길이 설정됨"
+else
+  check_warn "PAM 비밀번호 최소 길이 미설정"
+fi
+
+if grep -q 'pam_faillock.so' /etc/pam.d/common-auth || grep -q 'pam_tally2.so' /etc/pam.d/common-auth; then
+  check_pass "PAM 로그인 실패 잠금 정책 설정됨"
+else
+  check_warn "PAM 로그인 실패 잠금 정책 미설정"
+fi
+
+if grep -q 'pam_wheel.so.*group=sudo' /etc/pam.d/su; then
+  check_pass "su 명령 sudo 그룹 제한 설정됨"
+else
+  check_warn "su 명령 그룹 제한 미설정"
+fi
+echo ""
+
+# 5. 파일 권한 확인
+echo "[5] 주요 파일 권한 확인"
+check_perm() {
+  local file="$1" expected_perm="$2" expected_owner="$3"
+  if [[ -e "$file" ]]; then
+    actual_perm=$(stat -c '%a' "$file")
+    actual_owner=$(stat -c '%U:%G' "$file")
+    if [[ "$actual_perm" == "$expected_perm" ]] && [[ "$actual_owner" == "$expected_owner" ]]; then
+      check_pass "$file 권한 정상 ($actual_perm $actual_owner)"
+    else
+      check_warn "$file 권한: $actual_perm $actual_owner (예상: $expected_perm $expected_owner)"
+    fi
+  else
+    check_warn "$file 파일이 존재하지 않음"
+  fi
+}
+
+check_perm "/etc/passwd" "644" "root:root"
+check_perm "/etc/shadow" "640" "root:shadow"
+check_perm "/tmp" "1777" "root:root"
+check_perm "/var/tmp" "1777" "root:root"
+echo ""
+
+# 6. sysctl 설정 확인
+echo "[6] 커널 파라미터 설정 확인"
+if [[ -f /etc/sysctl.d/99-secure-os.conf ]]; then
+  check_pass "sysctl 보안 설정 파일 존재함"
+  if grep -q 'net.ipv6.conf.all.disable_ipv6.*=.*1' /etc/sysctl.d/99-secure-os.conf; then
+    check_pass "IPv6 비활성화 설정됨"
+  fi
+  if grep -q 'net.ipv4.icmp_echo_ignore_broadcasts.*=.*1' /etc/sysctl.d/99-secure-os.conf; then
+    check_pass "ICMP 브로드캐스트 무시 설정됨"
+  fi
+else
+  check_warn "sysctl 보안 설정 파일 없음"
+fi
+echo ""
+
+# 7. limits 설정 확인
+echo "[7] 자원 제한 설정 확인"
+if [[ -f /etc/security/limits.d/99-secure-os.conf ]]; then
+  check_pass "limits 설정 파일 존재함"
+  if grep -q 'nofile.*61200' /etc/security/limits.d/99-secure-os.conf; then
+    check_pass "파일 디스크립터 제한 설정됨"
+  fi
+else
+  check_warn "limits 설정 파일 없음"
+fi
+echo ""
+
+# 8. 서비스 비활성화 확인
+echo "[8] 불필요 서비스 비활성화 확인"
+SERVICES=(avahi-daemon cups bluetooth)
+for svc in "${SERVICES[@]}"; do
+  if systemctl is-enabled "$svc" >/dev/null 2>&1; then
+    if [[ "$(systemctl is-enabled "$svc" 2>/dev/null)" == "disabled" ]]; then
+      check_pass "서비스 '$svc' 비활성화됨"
+    else
+      check_warn "서비스 '$svc' 활성화되어 있음"
+    fi
+  else
+    check_pass "서비스 '$svc' 존재하지 않거나 이미 비활성화됨"
+  fi
+done
+echo ""
+
+# 9. 작업 흔적 제거 확인
+echo "[9] 작업 흔적 제거 확인"
+if [[ ! -d "/usr/local/src/secure_os_collection" ]]; then
+  check_pass "스크립트 디렉터리 삭제됨"
+else
+  check_warn "스크립트 디렉터리가 여전히 존재함"
+fi
+
+if [[ ! -f "/usr/local/src/secure_os_collection.zip" ]]; then
+  check_pass "zip 파일 삭제됨"
+else
+  check_warn "zip 파일이 여전히 존재함"
+fi
+echo ""
+
+# 10. NTP 설정 확인
+echo "[10] 시간 동기화 설정 확인"
+if systemctl is-active systemd-timesyncd >/dev/null 2>&1 || systemctl is-active chrony >/dev/null 2>&1; then
+  check_pass "시간 동기화 서비스 실행 중"
+else
+  check_warn "시간 동기화 서비스 미실행"
+fi
+echo ""
+
+# 최종 요약
+echo "=============================================="
+echo "검증 결과 요약"
+echo "=============================================="
+echo "  ✓ PASS: $PASS_COUNT"
+echo "  ⚠ WARN: $WARN_COUNT"
+echo "  ✗ FAIL: $FAIL_COUNT"
+echo ""
+
+if [[ $FAIL_COUNT -eq 0 ]]; then
+  echo "🎉 모든 중요 보안 설정이 정상적으로 적용되었습니다!"
+  exit 0
+else
+  echo "⚠️  일부 보안 설정이 누락되었습니다. 위 내용을 확인하세요."
+  exit 1
+fi

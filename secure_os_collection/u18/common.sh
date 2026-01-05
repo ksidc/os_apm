@@ -43,24 +43,6 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-ensure_backup_dir() {
-  mkdir -p "$BACKUP_DIR"
-  chmod 700 "$BACKUP_DIR"
-}
-
-backup_file() {
-  ensure_backup_dir
-  local src
-  for src in "$@"; do
-    if [[ -e "$src" ]]; then
-      cp "$src" "${BACKUP_DIR}/$(basename "$src").bak_$(date +%F_%T)"
-      log_info "백업 완료: $src -> $BACKUP_DIR"
-    else
-      log_warn "백업 건너뜀(파일 없음): $src"
-    fi
-  done
-}
-
 set_file_perms() {
   local file="$1" owner="$2" perms="$3"
   if [[ -e "$file" ]]; then
@@ -120,25 +102,4 @@ prompt_yes_no() {
   done
 }
 
-# ------------------------------------------------------------------------------
-# 외부 설정 로드
-# ------------------------------------------------------------------------------
-
-load_external_config() {
-  local candidate
-
-  if [[ -n "${CONFIG_FILE:-}" && -r "$CONFIG_FILE" ]]; then
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
-    log_info "외부 설정 파일을 불러왔습니다: $CONFIG_FILE"
-    return 0
-  fi
-
-  candidate="/etc/hardening.conf"
-  if [[ -r "$candidate" ]]; then
-    # shellcheck source=/dev/null
-    source "$candidate"
-    log_info "기본 설정 파일을 불러왔습니다: $candidate"
-  fi
-}
 

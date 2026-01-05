@@ -17,7 +17,6 @@ SERVICES_DISABLED=""
 configure_rsyslog() {
   log_info "configure_rsyslog 시작"
   if dpkg -s rsyslog >/dev/null 2>&1; then
-    backup_file /etc/rsyslog.conf
     chown root:root /etc/rsyslog.conf
     chmod 640 /etc/rsyslog.conf
     if ! grep -qxF "*.* @$RSYSLOG_SERVER" /etc/rsyslog.conf; then
@@ -32,7 +31,6 @@ configure_rsyslog() {
 
 disable_rhosts_hosts_equiv() {
   log_info "disable_rhosts_hosts_equiv 시작"
-  backup_file /etc/hosts.equiv "$HOME/.rhosts"
   rm -f /etc/hosts.equiv "$HOME/.rhosts"
   log_info "rhosts 및 hosts.equiv 파일을 제거했습니다."
 }
@@ -50,7 +48,6 @@ disable_finger() {
 disable_anonymous_ftp() {
   log_info "disable_anonymous_ftp 시작"
   if dpkg -s vsftpd >/dev/null 2>&1; then
-    backup_file /etc/vsftpd.conf
     if grep -q '^anonymous_enable=' /etc/vsftpd.conf; then
       sed -i 's/^anonymous_enable=.*/anonymous_enable=NO/' /etc/vsftpd.conf
     else
@@ -79,7 +76,6 @@ configure_cron_permissions() {
   local file
   for file in /etc/cron.allow /etc/cron.deny; do
     if [[ -e "$file" ]]; then
-      backup_file "$file"
       set_file_perms "$file" root:root 640
     fi
   done
@@ -115,7 +111,6 @@ disable_nis() {
 configure_ftp_shell() {
   log_info "configure_ftp_shell 시작"
   if getent passwd ftp >/dev/null; then
-    backup_file /etc/passwd
     sed -i 's#^\(ftp:.*:\)\(/usr\)\?/sbin/nologin#\1/bin/false#' /etc/passwd
     log_info "ftp 계정 로그인 쉘을 /bin/false로 변경했습니다."
   fi

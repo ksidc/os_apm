@@ -1,11 +1,6 @@
 #!/bin/bash
-# iptables.sh : CentOS 7 firewall configuration (interactive)
-# Usage: source or execute directly
 
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/common.sh"
+source /usr/local/src/secure_os_collection/c7/common.sh
 
 # Default SSH port resolution order: NEW_SSH_PORT -> sshd_config -> fallback 22
 SSH_PORT="${NEW_SSH_PORT:-$(grep -iE '^[# ]*Port[[:space:]]+[0-9]+' /etc/ssh/sshd_config | awk '{print $2}' | tail -n1)}"
@@ -15,57 +10,51 @@ SSH_PORT="${SSH_PORT:-22}"
 RULES_FILE="/etc/sysconfig/iptables"
 
 configure_tcp_wrappers() {
-  log_info "[NETWORK] Configuring TCP wrappers"
-  yum install -y tcp_wrappers || log_error "configure_tcp_wrappers" "Failed to install tcp_wrappers"
-  backup_file /etc/hosts.allow /etc/hosts.deny
-  echo "sshd: ALL" > /etc/hosts.allow
-  echo "ALL: ALL" > /etc/hosts.deny
-  set_file_perms /etc/hosts.allow root:root 644
-  set_file_perms /etc/hosts.deny root:root 644
+    log_info "configure_tcp_wrappers 시작"
+    yum install -y tcp_wrappers || { log_error "configure_tcp_wrappers" "tcp_wrappers 설치 실패"; exit 1; }
+    echo "sshd: ALL" > /etc/hosts.allow
+    echo "ALL: ALL" > /etc/hosts.deny
+    set_file_perms /etc/hosts.allow root:root 644
+    set_file_perms /etc/hosts.deny root:root 644
+    log_info "TCP wrappers 설정 완료"
 }
 
 disable_rhosts_hosts_equiv() {
-  log_info "[NETWORK] Removing rhosts/hosts.equiv trust files"
-  backup_file /etc/hosts.equiv "$HOME/.rhosts"
-  rm -f /etc/hosts.equiv "$HOME/.rhosts"
+    log_info "disable_rhosts_hosts_equiv 시작"
+    rm -f /etc/hosts.equiv "$HOME/.rhosts" 2>/dev/null || true
+    log_info "rhosts/hosts.equiv 제거 완료"
 }
 
-########################################
-# 1. Disable firewalld entirely (if present)
-########################################
+# Disable firewalld if present
 if command -v firewall-cmd >/dev/null 2>&1; then
-  systemctl stop firewalld || true
-  systemctl disable firewalld || true
-  systemctl mask firewalld || true
-  log_info "[NETWORK] firewalld disabled and masked"
+    systemctl stop firewalld 2>/dev/null || true
+    systemctl disable firewalld 2>/dev/null || true
+    systemctl mask firewalld 2>/dev/null || true
+    log_info "firewalld 비활성화 및 마스킹 완료"
 fi
 
-# Always apply TCP wrapper hardening even if iptables is skipped
+# Always apply TCP wrapper hardening
 configure_tcp_wrappers
 disable_rhosts_hosts_equiv
 
-########################################
-# 2. Prompt for iptables usage
-########################################
-echo "���� ��ȭ��(iptables)�� Ȱ��ȭ�Ͻðڽ��ϱ�? (y/n)"
-read -r USE_IPTABLES
+# Prompt for iptables usage
+echo "방화벽(iptables)을 활성화하시겠습니까? (Y/N)"
+read -r USE_IPTABLES < /dev/tty
 
-########################################
-# 3. Configure iptables if requested
-########################################
+# Configure iptables if requested
 if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
-  log_info "[NETWORK] Configuring iptables firewall"
+    log_info "iptables 방화벽 설정 시작"
 
-  # Ensure required packages are installed
-  if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
-    yum install -y iptables iptables-services || { log_error "iptables" "Failed to install iptables packages"; exit 1; }
-    log_info "[NETWORK] Installed iptables/iptables-services"
-  else
-    log_info "[NETWORK] iptables/iptables-services already present"
-  fi
+    # Ensure required packages are installed
+    if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
+        yum install -y iptables iptables-services || { log_error "iptables" "iptables 패키지 설치 실패"; exit 1; }
+        log_info "iptables/iptables-services 설치 완료"
+    else
+        log_info "iptables/iptables-services 이미 설치됨"
+    fi
 
-  # Write iptables rules
-  cat > "$RULES_FILE" <<EOF
+    # Write iptables rules
+    cat > "$RULES_FILE" <<EOF
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
@@ -111,7 +100,7 @@ if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 110 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 143 -j ACCEPT
 
-# MySQL service port (adjust as needed)
+# MySQL service port
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
 # Default drop policies
@@ -121,17 +110,18 @@ if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
 COMMIT
 EOF
 
-  chmod 600 "$RULES_FILE"
-  log_info "[NETWORK] iptables rules written to $RULES_FILE"
+    chmod 600 "$RULES_FILE"
+    log_info "iptables 규칙 파일 생성 완료: $RULES_FILE"
 
-  # Enable and restart service to apply rules
-  systemctl enable iptables >/dev/null 2>&1 || log_error "iptables" "Failed to enable iptables service"
-  if systemctl restart iptables; then
-    log_info "[NETWORK] iptables service restarted successfully"
-  else
-    echo "iptables ��Ģ ���뿡 �����߽��ϴ� - $RULES_FILE ������ Ȯ���ϼ���" >&2
-    exit 1
-  fi
+    # Enable and restart service to apply rules
+    systemctl enable iptables >/dev/null 2>&1 || { log_error "iptables" "iptables 서비스 활성화 실패"; exit 1; }
+    if systemctl restart iptables; then
+        log_info "iptables 서비스 재시작 성공"
+    else
+        echo "iptables 규칙 적용에 실패했습니다 - $RULES_FILE 파일을 확인하세요" >&2
+        log_error "iptables" "iptables 서비스 재시작 실패"
+        exit 1
+    fi
 else
-  log_info "[NETWORK] Skipping iptables configuration (firewalld remains disabled)"
+    log_info "iptables 설정 생략 (firewalld는 비활성화됨)"
 fi

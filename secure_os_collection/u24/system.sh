@@ -11,11 +11,8 @@ if [[ -n "${SECURE_OS_SYSTEM_LOADED:-}" ]]; then
 fi
 readonly SECURE_OS_SYSTEM_LOADED=1
 
-SYSTEM_TUNING_SUMMARY="미적용"
-
 disable_auto_updates() {
   log_info "disable_auto_updates 시작"
-  backup_file /etc/apt/apt.conf.d/20auto-upgrades
   cat <<'EOF' > /etc/apt/apt.conf.d/20auto-upgrades
 APT::Periodic::Update-Package-Lists "0";
 APT::Periodic::Unattended-Upgrade "0";
@@ -50,13 +47,11 @@ install_base_packages() {
 configure_ntp() {
   log_info "configure_ntp 시작"
   if dpkg -s chrony >/dev/null 2>&1; then
-    backup_file /etc/chrony/chrony.conf
     sed -i '/^pool /d' /etc/chrony/chrony.conf
     echo "pool $NTP_SERVER iburst" >> /etc/chrony/chrony.conf
     systemctl enable --now chrony || { log_error "configure_ntp" "chrony 시작 실패"; exit 1; }
     chronyc makestep || log_warn "chrony 시간 동기화에 실패했습니다."
   else
-    backup_file /etc/systemd/timesyncd.conf
     if grep -q '^NTP=' /etc/systemd/timesyncd.conf; then
       sed -i "s/^NTP=.*/NTP=$NTP_SERVER/" /etc/systemd/timesyncd.conf
     else
@@ -70,7 +65,6 @@ configure_ntp() {
 
 configure_history_timeout() {
   log_info "configure_history_timeout 시작"
-  backup_file /etc/profile
   if ! grep -q 'HISTTIMEFORMAT' /etc/profile; then
     echo 'export HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S "' >> /etc/profile
   fi
@@ -82,7 +76,6 @@ configure_history_timeout() {
 
 configure_etc_perms() {
   log_info "configure_etc_perms 시작"
-  backup_file /etc/passwd /etc/shadow /etc/hosts /usr/bin/su
   set_file_perms /etc/passwd root:root 644
   set_file_perms /etc/shadow root:shadow 640
   set_file_perms /etc/hosts root:root 644
@@ -117,8 +110,6 @@ configure_security_settings() {
     /usr/bin/at
   )
 
-  backup_file /usr/bin/newgrp /usr/bin/perl /usr/bin/screen /usr/bin/wget /usr/bin/curl /sbin/unix_chkpwd /usr/bin/at
-
   for file in "${removable_suid[@]}"; do
     if [[ -e "$file" ]]; then
       chmod -s "$file"
@@ -139,8 +130,14 @@ configure_security_settings() {
 
 configure_motd() {
   log_info "configure_motd 시작"
-  backup_file /etc/motd
-  cat <<'EOF' > /etc/motd
+
+  # 버전 정보 로드 (없으면 unknown 사용)
+  SCRIPT_VERSION="unknown"
+  if [[ -f /usr/local/src/secure_os_collection/version.conf ]]; then
+    source /usr/local/src/secure_os_collection/version.conf
+  fi
+
+  cat <<EOF > /etc/motd
 ********************************************************************
 *                                                                  *
 *  이 시스템은 허가된 사용자만 사용할 수 있습니다.              *
@@ -154,14 +151,13 @@ configure_motd() {
 *  evidence of criminal activity, system personnel may provide the  *
 *  evidence from such monitoring to law enforcement officials.      *
 *                                                                  *
-*  Apply version 251203                                            *
+*  Apply version ${SCRIPT_VERSION}                                 *
 ********************************************************************
 EOF
 }
 
 configure_bash_vim() {
   log_info "configure_bash_vim 시작"
-  backup_file /root/.bashrc /root/.vimrc
   local aliases=(
     "alias vi='vim'"
     "alias grep='grep --color=auto'"
@@ -237,7 +233,6 @@ perform_system_hardening() {
   ensure_sshd_runtime_dir
   configure_sysctl
   configure_limits
-  SYSTEM_TUNING_SUMMARY="적용 완료"
   log_info "시스템 설정 작업 완료"
 }
 
