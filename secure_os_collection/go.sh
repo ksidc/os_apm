@@ -31,7 +31,12 @@ LOG_FILE="$LOG_DIR/go_$(date +%Y%m%d_%H%M%S).log"
 
 # 로그 함수
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    # 로그 파일 디렉토리가 존재할 때만 tee 실행 (삭제된 경우 에러 방지)
+    if [ -d "$LOG_DIR" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    fi
 }
 
 # 로그 디렉토리 생성

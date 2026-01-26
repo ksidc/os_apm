@@ -73,7 +73,14 @@ configure_file_permissions() {
 
 configure_motd() {
     log_info "configure_motd 시작"
-    cat <<'EOF' > /etc/motd
+
+    # 버전 정보 로드 (없으면 unknown 사용)
+    SCRIPT_VERSION="unknown"
+    if [[ -f /usr/local/src/secure_os_collection/version.conf ]]; then
+        source /usr/local/src/secure_os_collection/version.conf
+    fi
+
+    cat <<EOF > /etc/motd
 "********************************************************************
 *                                                                  *
 * 본 시스템은 허가된 사용자만 이용하실 수 있습니다.                *
@@ -88,7 +95,7 @@ configure_motd() {
 * evidence of criminal activity, system personnel may provide the  *
 * evidence from such monitoring to law enforcement officials.      *
 *                                                                  *
-* Apply version 251203                                             *
+* Apply version ${SCRIPT_VERSION}                                  *
 ********************************************************************
 EOF
     log_info "motd 설정 완료"

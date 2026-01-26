@@ -127,58 +127,47 @@ SUMMARY_LINES+=("서비스 비활성화: $(format_value "$SERVICES_DISABLED")")
 log_info "결과 요약 출력 및 저장 완료: $RESULT_FILE"
 
 # 리부팅 확인
-log_info "리부팅 확인 시작"
-read -r -p "시스템을 지금 리부팅하시겠습니까? (Y/N): " reboot < /dev/tty
+log_info "모든 작업 완료. 정리 및 재부팅 대기."
 
-# 로그 파일 출력 중지 (디렉토리 삭제 전)
-LOG_FILE=/dev/null
-RESULT_FILE=/dev/null
+echo ""
+echo "============================================================================"
+echo " [경고] 'Y' 선택 시 설치 파일(/usr/local/src/secure_os_collection)과"
+echo "        로그 파일이 모두 삭제되며, 즉시 시스템이 재부팅됩니다."
+echo "============================================================================"
 
-# 작업 흔적 제거
-echo -e "\n=== 작업 흔적 제거 중 ==="
-
-# 1. zip 파일 및 스크립트 디렉토리 삭제
-echo "  → 스크립트 및 zip 파일 삭제 중..."
-SCRIPT_DIR="/usr/local/src/secure_os_collection"
-ZIP_FILE="/usr/local/src/secure_os_collection.zip"
-[ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
-[ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
-
-# 3. 임시 파일 정리
-rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
-
-# 4. 모든 사용자 히스토리 삭제
-echo "  → 명령 히스토리 삭제 중..."
-rm -f /root/.bash_history /root/.history
-printf 'history -c\nhistory -w\n' > /root/.bash_logout
-
-for user_home in /home/*; do
-    [ -d "$user_home" ] || continue
-    rm -f "$user_home/.bash_history" "$user_home/.history"
-    printf 'history -c\nhistory -w\n' > "$user_home/.bash_logout"
-    chown "$(basename "$user_home")":"$(basename "$user_home")" "$user_home/.bash_logout" 2>/dev/null || true
-    chmod 600 "$user_home/.bash_logout" 2>/dev/null || true
+while true; do
+    read -r -p "설치 파일을 삭제하고 시스템을 재부팅하시겠습니까? (Y/N): " confirm_finish < /dev/tty
+    
+    case "$confirm_finish" in
+        [Yy]*)
+            log_info "사용자 요청에 의한 파일 삭제 및 재부팅 시작"
+            echo "  → 설치 파일 및 로그 삭제 중..."
+            
+            # 디렉토리 변수 (하드코딩 방지용 로컬 선언)
+            SCRIPT_DIR="/usr/local/src/secure_os_collection"
+            ZIP_FILE="/usr/local/src/secure_os_collection.zip"
+            
+            # 1. zip 파일 및 스크립트 디렉토리 삭제
+            [ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
+            [ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
+            
+            # 2. 임시 파일 정리
+            rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
+            
+            echo "  → 시스템을 재부팅합니다..."
+            sleep 1
+            # 파일이 삭제되었어도 셸 메모리에 로드된 명령은 실행됨
+            init 6
+            break
+            ;;
+        [Nn]*)
+            log_info "사용자 요청에 의해 정리 및 재부팅 취소됨."
+            echo "  → 파일 삭제 및 재부팅을 취소했습니다."
+            echo "  → 로그 및 스크립트가 유지됩니다."
+            exit 0
+            ;;
+        *)
+            echo "잘못된 입력입니다. 'Y' 또는 'N'을 입력해주세요."
+            ;;
+    esac
 done
-
-echo "  ✓ 모든 작업 흔적 제거 완료"
-
-# 실행 셸 히스토리도 즉시 비우고 기록을 끔
-history -c 2>/dev/null || true
-history -w 2>/dev/null || true
-unset HISTFILE
-sleep 3
-
-# 리부팅 또는 종료
-action_cmd="kill -9 $$"
-action_msg=$'  → 설정 적용을 위해 시스템 리부팅을 권장합니다.\n  → 3초 후 로그아웃됩니다...'
-wait_seconds=3
-
-if [[ "$reboot" =~ ^[Yy]$ ]]; then
-    action_cmd="init 6"
-    action_msg="  → 시스템을 재부팅합니다..."
-    wait_seconds=1
-fi
-
-echo -e "$action_msg"
-sleep "$wait_seconds"
-eval "$action_cmd"
