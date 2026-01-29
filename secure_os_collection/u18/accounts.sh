@@ -179,50 +179,75 @@ setup_fallback_account_and_restrict_root() {
   update_normal_users_list
   echo "현재 일반 사용자 목록: $NORMAL_USERS_LIST"
 
-  if prompt_yes_no "추가 관리자 계정을 생성하시겠습니까?"; then
+    if prompt_yes_no "추가 관리자 계정을 생성하시겠습니까?"; then
     while true; do
-      read_from_tty "계정명(영문, 숫자, -, _ 허용)을 입력하세요: " username
+      read_from_tty "계정명(영문, 숫자, -, _ 허용)을 입력하세요 (취소하려면 'cancel' 또는 'q' 입력): " username
       if [[ -z "$username" ]]; then
         echo "계정명을 비울 수 없습니다."
         continue
       fi
+      
+      # Expanded cancellation keywords (case-insensitive)
+      if [[ "${username,,}" =~ ^(!?cancel|!chain|quit|exit|q|!취소)$ ]]; then
+          echo "계정 생성을 취소합니다."
+          username="!cancel" # Normalize cancellation flag
+          break
+      fi
+
+      # Regex validation for username
       if [[ ! "$username" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-        echo "허용되지 않는 문자입니다. 다시 입력해주세요."
+        echo "허용되지 않는 문자입니다. (영문, 숫자, -, _ 만 허용)"
         continue
       fi
+
       if id "$username" >/dev/null 2>&1; then
-        echo "이미 존재하는 계정입니다. 다른 이름을 입력해주세요."
-        continue
+        echo "이미 존재하는 계정입니다."
+         if prompt_yes_no "이 계정($username)을 관리자 용도로 사용하고, 새 생성을 취소하시겠습니까?"; then
+             CREATED_USER="$username"
+             log_info "기존 계정($username)을 관리자 용도로 사용합니다."
+             break
+        else
+             echo "다른 이름을 입력해주세요."
+             continue
+        fi
       fi
       break
     done
-
-    local password confirm
-    while true; do
-      read_password_from_tty "'${username}' 계정 비밀번호(최소 ${MIN_PASSWORD_LENGTH}자)를 입력하세요: " password
-      if (( ${#password} < MIN_PASSWORD_LENGTH )); then
-        echo "비밀번호 길이가 부족합니다."
-        continue
-      fi
-      read_password_from_tty "비밀번호를 다시 입력하세요: " confirm
-      if [[ "$password" != "$confirm" ]]; then
-        echo "비밀번호가 일치하지 않습니다."
-        continue
-      fi
-      break
-    done
-
-    if useradd -m -G adm,sudo "$username"; then
-      if echo "${username}:${password}" | chpasswd; then
-        usermod -aG sudo "$username" >/dev/null 2>&1 || log_warn "sudo 그룹 추가 실패: $username"
-        CREATED_USER="$username"
-        log_info "새 관리자 계정을 생성했습니다: $username"
-      else
-        log_error "setup_fallback_account_and_restrict_root" "계정 비밀번호 설정 실패: $username"
-      fi
+    
+    # Check if we cancelled or selected existing user
+    if [[ "$username" == "!cancel" || "$username" == "!취소" ]]; then
+         log_info "계정 생성이 취소되었습니다."
+    elif id "$username" >/dev/null 2>&1; then
+         # Existing user selected, skip creation
+         usermod -aG sudo "$username" >/dev/null 2>&1 || log_warn "sudo 그룹 추가 실패: $username"
     else
-      log_error "setup_fallback_account_and_restrict_root" "계정 생성 실패: $username"
-      exit 1
+        local password confirm
+        while true; do
+          read_password_from_tty "'${username}' 계정 비밀번호(최소 ${MIN_PASSWORD_LENGTH}자)를 입력하세요: " password
+          if (( ${#password} < MIN_PASSWORD_LENGTH )); then
+            echo "비밀번호 길이가 부족합니다."
+            continue
+          fi
+          read_password_from_tty "비밀번호를 다시 입력하세요: " confirm
+          if [[ "$password" != "$confirm" ]]; then
+            echo "비밀번호가 일치하지 않습니다."
+            continue
+          fi
+          break
+        done
+
+        if useradd -m -G adm,sudo "$username"; then
+          if echo "${username}:${password}" | chpasswd; then
+            usermod -aG sudo "$username" >/dev/null 2>&1 || log_warn "sudo 그룹 추가 실패: $username"
+            CREATED_USER="$username"
+            log_info "새 관리자 계정을 생성했습니다: $username"
+          else
+            log_error "setup_fallback_account_and_restrict_root" "계정 비밀번호 설정 실패: $username"
+          fi
+        else
+          log_error "setup_fallback_account_and_restrict_root" "계정 생성 실패: $username"
+          exit 1
+        fi
     fi
   else
     log_info "추가 관리자 계정 생성이 건너뛰어졌습니다."

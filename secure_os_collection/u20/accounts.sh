@@ -163,34 +163,58 @@ setup_fallback_account_and_restrict_root() {
 
   if [[ "$create_fallback" == true ]]; then
     while true; do
-      read_from_tty "생성할 계정 이름: " fallback_user
+      read_from_tty "생성할 계정 이름을 입력하세요 (취소하려면 'cancel' 또는 'q' 입력): " fallback_user
       [[ -z "$fallback_user" ]] && { echo "계정 이름을 입력하세요."; continue; }
+      
+      # Expanded cancellation keywords (case-insensitive)
+      if [[ "${fallback_user,,}" =~ ^(!?cancel|!chain|quit|exit|q|!취소)$ ]]; then
+        echo "계정 생성을 취소합니다."
+        create_fallback=false
+        break
+      fi
+
+      # Regex validation for username
+      if [[ ! "$fallback_user" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "허용되지 않는 문자입니다. (영문, 숫자, -, _ 만 허용)"
+        continue
+      fi
+
       if id "$fallback_user" >/dev/null 2>&1; then
-        echo "이미 존재하는 계정입니다. 다른 이름을 입력하세요."
-        continue
+        echo "이미 존재하는 계정입니다."
+        if prompt_yes_no "이 계정($fallback_user)을 관리자 용도로 사용하고, 새 생성을 취소하시겠습니까?"; then
+             create_fallback=false
+             CREATED_USER="$fallback_user"
+             log_info "기존 계정($fallback_user)을 거부용도(fallback)로 사용합니다."
+             break
+        else
+             echo "다른 이름을 입력하세요."
+             continue
+        fi
       fi
       break
     done
 
-    local password confirm
-    while true; do
-      read_password_from_tty "계정 '${fallback_user}' 비밀번호(최소 ${MIN_PASSWORD_LENGTH}자): " password
-      if (( ${#password} < MIN_PASSWORD_LENGTH )); then
-        echo "비밀번호 길이가 부족합니다."
-        continue
-      fi
-      read_password_from_tty "비밀번호 확인: " confirm
-      if [[ "$password" != "$confirm" ]]; then
-        echo "비밀번호가 일치하지 않습니다."
-        continue
-      fi
-      break
-    done
+    if [[ "$create_fallback" == true ]]; then
+      local password confirm
+      while true; do
+        read_password_from_tty "계정 '${fallback_user}' 비밀번호(최소 ${MIN_PASSWORD_LENGTH}자): " password
+        if (( ${#password} < MIN_PASSWORD_LENGTH )); then
+          echo "비밀번호 길이가 부족합니다."
+          continue
+        fi
+        read_password_from_tty "비밀번호 확인: " confirm
+        if [[ "$password" != "$confirm" ]]; then
+          echo "비밀번호가 일치하지 않습니다."
+          continue
+        fi
+        break
+      done
 
-    useradd -m -G adm,sudo -s /bin/bash "$fallback_user" || { log_error "setup_fallback_account" "계정 생성 실패"; exit 1; }
-    echo "${fallback_user}:${password}" | chpasswd || { log_error "setup_fallback_account" "비밀번호 설정 실패"; exit 1; }
-    CREATED_USER="$fallback_user"
-    log_info "관리자 계정 '${fallback_user}'을 생성했습니다."
+      useradd -m -G adm,sudo -s /bin/bash "$fallback_user" || { log_error "setup_fallback_account" "계정 생성 실패"; exit 1; }
+      echo "${fallback_user}:${password}" | chpasswd || { log_error "setup_fallback_account" "비밀번호 설정 실패"; exit 1; }
+      CREATED_USER="$fallback_user"
+      log_info "관리자 계정 '${fallback_user}'을 생성했습니다."
+    fi
   fi
 
   local ssh_config="/etc/ssh/sshd_config"
