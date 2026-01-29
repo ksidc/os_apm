@@ -129,7 +129,7 @@ log "하위 스크립트 권한 설정 완료"
 # secure 스크립트 실행
 log "$SECURE_SCRIPT 실행 시작"
 bash "$SECURE_SCRIPT" || {
-    log "ERROR: $SECURE_SCRIPT 실행 실패. 롤백 실행 권장: bash $SOURCE_DIR/rollback.sh"
+    log "ERROR: $SECURE_SCRIPT 실행 실패."
     exit 1
 }
 log "$SECURE_SCRIPT 실행 완료"
