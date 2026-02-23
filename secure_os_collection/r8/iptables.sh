@@ -23,27 +23,22 @@ if command -v firewall-cmd >/dev/null 2>&1; then
 fi
 
 ########################################
-# 2. 사용자 선택
+# 2. iptables 방화벽 설정 적용
 ########################################
-echo "로컬 방화벽(iptables)를 사용하시겠습니까? (y/n)"
-read -r USE_IPTABLES
+log_info "iptables 방화벽을 설정합니다."
 
-########################################
-# 3. iptables 적용 여부 분기
-########################################
-if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
-    log_info "iptables 방화벽을 설정합니다."
+# iptables 패키지 설치
+if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
+    dnf install -y iptables iptables-services || { log_error "iptables" "설치 실패"; exit 1; }
+    log_info "iptables/iptables-services 설치 완료"
+else
+    log_info "iptables/iptables-services 이미 설치됨"
+fi
 
-    # iptables 패키지 설치
-    if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
-        dnf install -y iptables iptables-services || { log_error "iptables" "설치 실패"; exit 1; }
-        log_info "iptables/iptables-services 설치 완료"
-    else
-        log_info "iptables/iptables-services 이미 설치됨"
-    fi
+systemctl unmask iptables >/dev/null 2>&1 || true
 
-    # 규칙 파일 작성
-    cat > "$rules" <<EOF
+# 규칙 파일 작성
+cat > "$rules" <<EOF
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
@@ -68,48 +63,44 @@ if [[ "$USE_IPTABLES" =~ ^[Yy]$ ]]; then
 -A RH-Firewall-1-INPUT -p tcp -s 121.166.140.142 -j ACCEPT
 ######################################################################################################
 
-# FTP Service Port & Passive Port
+# FTP 서비스 포트 및 Passive 포트
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 8080 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 8090 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 20 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 21 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 5000:5050 -j ACCEPT
 
-# Web Service Port
+# Web 서비스 포트
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
 
-# Managed Port ( SSH & SNMP )
+# 관리 포트 (SSH 및 SNMP)
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport ${SSH_PORT} -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p udp --dport 161 -j ACCEPT
 
-# Mail Service Port
+# 메일 서비스 포트
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 25 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 587 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 110 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 143 -j ACCEPT
 
-# Mysql Service Port (옵션: 필요 시 차단)
+# MySQL 서비스 포트 (필요 시 차단 가능)
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
-# DROP 정책
+# 기본 차단(DROP) 정책
 -A RH-Firewall-1-INPUT -p icmp --icmp-type any -j DROP
 -A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 
 COMMIT
 EOF
 
-    chmod 600 "$rules"
-    log_info "iptables 규칙 파일 생성: $rules"
+chmod 600 "$rules"
+log_info "iptables 규칙 파일 생성: $rules"
 
-    # 서비스 적용
-    systemctl enable iptables
-    systemctl restart iptables || {
-        echo "❌ iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요"
-        exit 1
-    }
-    log_info "iptables 적용 및 검증 완료"
-
-else
-    log_info "iptables 사용하지 않음 → firewalld 비활성화 상태로 유지"
-fi
+# 서비스 적용
+systemctl enable iptables
+systemctl restart iptables || {
+    echo "❌ iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요"
+    exit 1
+}
+log_info "iptables 적용 및 검증 완료"

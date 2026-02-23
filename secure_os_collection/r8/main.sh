@@ -50,12 +50,39 @@ source /usr/local/src/secure_os_collection/r8/system.sh || {
 }
 log_info "system.sh 실행 완료"
 
- log_info "iptables.sh 실행 시작"
- source /usr/local/src/secure_os_collection/r8/iptables.sh || { 
-     log_error "main" "iptables.sh 실행 실패"
-     exit 1
- }
- log_info "iptables.sh 실행 완료"
+while true; do
+    echo "방화벽 시스템을 선택하세요:"
+    echo "  1) iptables 설정"
+    echo "  2) firewalld 설정"
+    echo "  3) 방화벽 미사용 (모두 비활성화)"
+    read -r -p "선택 (1/2/3): " FIREWALL_CHOICE < /dev/tty
+    case "$FIREWALL_CHOICE" in
+        1|2|3) break ;;
+        *) echo "잘못된 입력입니다. 1, 2, 3 중 하나를 선택해주세요." ;;
+    esac
+done
+
+if [ "$FIREWALL_CHOICE" -eq 1 ]; then
+    log_info "iptables.sh 실행 시작 (iptables 선택)"
+    source /usr/local/src/secure_os_collection/r8/iptables.sh || { 
+        log_error "main" "iptables.sh 실행 실패"
+        exit 1
+    }
+    log_info "iptables.sh 실행 완료"
+elif [ "$FIREWALL_CHOICE" -eq 2 ]; then
+    log_info "firewalld.sh 실행 시작 (firewalld 선택)"
+    source /usr/local/src/secure_os_collection/r8/firewalld.sh || {
+        log_error "main" "firewalld.sh 실행 실패"
+        exit 1
+    }
+    log_info "firewalld.sh 실행 완료"
+else
+    log_info "방화벽 미사용 설정 시작"
+    systemctl stop firewalld iptables 2>/dev/null || true
+    systemctl disable firewalld iptables 2>/dev/null || true
+    systemctl mask firewalld iptables 2>/dev/null || true
+    log_info "방화벽 미사용 설정 완료"
+fi
 
 log_info "accounts.sh 실행 시작"
 source /usr/local/src/secure_os_collection/r8/accounts.sh || { 

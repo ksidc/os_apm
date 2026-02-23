@@ -255,13 +255,21 @@ configure_su_restriction() {
 
 enable_wheel_in_sudoers() {
     log_info "enable_wheel_in_sudoers 시작"
-    if grep -Eq '^[[:space:]]*#?[[:space:]]*%wheel' /etc/sudoers; then
-        sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL).*\)/\1/' /etc/sudoers
-        log_info "sudoers의 wheel 항목 활성화"
-    else
+
+    # 1. NOPASSWD 항목이 활성화되어 있다면 다시 주석 처리하여 비밀번호 입력 강제
+    sed -i 's/^[[:space:]]*%wheel[[:space:]]\+ALL=(ALL)[[:space:]]\+NOPASSWD/# %wheel\tALL=(ALL)\tNOPASSWD/g' /etc/sudoers
+
+    # 2. 패스워드를 요구하는 기본 wheel 항목만 활성화
+    if grep -Eq '^[[:space:]]*#[[:space:]]*%wheel[[:space:]]+ALL=\(ALL\)[[:space:]]+ALL[[:space:]]*$' /etc/sudoers; then
+        sed -i 's/^[[:space:]]*#[[:space:]]*\(%wheel[[:space:]]\+ALL=(ALL)[[:space:]]\+ALL[[:space:]]*\)$/\1/' /etc/sudoers
+        log_info "sudoers의 wheel(비밀번호 필요) 항목 활성화"
+    elif ! grep -Eq '^[[:space:]]*%wheel[[:space:]]+ALL=\(ALL\)[[:space:]]+ALL[[:space:]]*$' /etc/sudoers; then
         echo '%wheel ALL=(ALL) ALL' >> /etc/sudoers
         log_info "sudoers에 wheel 항목 추가"
+    else
+        log_info "sudoers의 wheel 항목이 이미 정상 활성화되어 있음"
     fi
+
     if ! visudo -c >/dev/null 2>&1; then
         log_error "enable_wheel_in_sudoers" "sudoers 구문 검사 실패"
         return 1
