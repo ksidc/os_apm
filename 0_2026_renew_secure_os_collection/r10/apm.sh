@@ -1,0 +1,147 @@
+#!/bin/bash
+# apm.sh : Apache + MariaDB + PHP + FTP + Sendmail 설치 스크립트
+# Rocky Linux 8/9/10 기반
+
+source /usr/local/src/secure_os_collection/r10/common.sh
+
+echo "APM(Apache + MariaDB + PHP + FTP + Sendmail)을 설치하시겠습니까? (y/n)"
+read install
+
+case $install in
+yes|y|Y|YES)
+    log_info "=== APM 설치 및 설정 시작 ==="
+
+    ########################################
+    # Apache 설치 및 설정
+    ########################################
+    dnf -y install httpd httpd-tools mod_ssl
+    systemctl enable --now httpd
+
+    sed -i 's/^User .*/User nobody/g' /etc/httpd/conf/httpd.conf
+    sed -i 's/^Group .*/Group nobody/g' /etc/httpd/conf/httpd.conf
+    sed -i 's/#ServerName www.example.com:80/ServerName localhost:80/g' /etc/httpd/conf/httpd.conf
+
+    IPaddress=$(hostname -I | awk '{print $1}')
+    mkdir -p /home/iteasy
+    chown -R nobody:nobody /home/iteasy
+    chmod 755 /home/iteasy
+    cat <<EOF > /etc/httpd/conf.d/vhost.conf
+<VirtualHost *:80>
+    DocumentRoot /home/iteasy
+    ServerName ${IPaddress:-localhost}
+    ErrorLog logs/${IPaddress:-localhost}-error_log
+    CustomLog logs/${IPaddress:-localhost}-access_log common
+</VirtualHost>
+<Directory "/home/iteasy">
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+EOF
+
+    cat <<EOF > /etc/httpd/conf.d/mpm_tuning.conf
+<IfModule mpm_prefork_module>
+    ServerLimit          1024
+    StartServers            5
+    MinSpareServers         5
+    MaxSpareServers        10
+    MaxClients            2048
+    MaxRequestsPerChild      0
+</IfModule>
+EOF
+
+    systemctl restart httpd
+
+    ########################################
+    # MariaDB 설치 및 설정
+    ########################################
+    curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup |         sudo bash -s -- --mariadb-server-version=10.6
+    dnf module disable mariadb:10.3 -y
+    dnf clean all
+    dnf -y install mariadb-server mariadb
+    systemctl enable --now mariadb
+
+    mv /etc/my.cnf /etc/my.cnf_org 2>/dev/null
+    cat <<EOF > /etc/my.cnf
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+max_connections = 500
+max_allowed_packet=1024M
+symbolic-links=0
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+!includedir /etc/my.cnf.d
+EOF
+    systemctl restart mariadb
+
+    read -sp "MariaDB root 비밀번호를 입력하세요: " RootPassword
+    echo
+    mysqladmin -u root password "$RootPassword"
+
+    ########################################
+    # PHP 8.1 설치 및 설정
+    ########################################
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
+    dnf module disable php:remi-7.* -y
+    dnf module enable php:remi-8.1 -y
+    dnf install -y php php-bcmath php-bz2 php-cgi php-cli php-curl php-dba php-enchant php-fpm php-gd php-gmp php-intl php-json php-ldap php-mbstring php-mysqlnd php-odbc php-opcache php-pgsql php-readline php-snmp php-soap php-sqlite3 php-tidy php-xml php-xsl php-zip
+
+    echo "<?php phpinfo(); ?>" > /home/iteasy/info.php
+
+    sed -i 's/listen.acl_users = apache,nginx/;listen.acl_users = apache,nginx/g' /etc/php-fpm.d/www.conf
+    sed -i 's/;listen.owner = nobody/listen.owner = nobody/g' /etc/php-fpm.d/www.conf
+    sed -i 's/;listen.group = nobody/listen.group = nobody/g' /etc/php-fpm.d/www.conf
+
+    systemctl enable --now php-fpm
+    systemctl restart httpd
+
+    ########################################
+    # vsftpd 설치 및 설정
+    ########################################
+    dnf -y install vsftpd
+    sed -i 's/anonymous_enable=YES/anonymous_enable=NO/g' /etc/vsftpd/vsftpd.conf
+    sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd/vsftpd.conf
+    cat <<EOF >> /etc/vsftpd/vsftpd.conf
+allow_writeable_chroot=YES
+pasv_enable=YES
+pasv_min_port=5000
+pasv_max_port=5050
+EOF
+    systemctl enable --now vsftpd
+
+    ########################################
+    # Sendmail 설치 및 설정
+    ########################################
+    dnf -y install sendmail sendmail-cf
+    cp -f /etc/mail/sendmail.mc /etc/mail/sendmail.mc_ori
+    [ -f /etc/mail/sendmail.cf ] && mv /etc/mail/sendmail.cf /etc/mail/sendmail.cf_ori
+    sed -i 's/dnl TRUST_AUTH_MECH/TRUST_AUTH_MECH/g' /etc/mail/sendmail.mc
+    sed -i 's/dnl define(`confAUTH_MECHANISMS/define(`confAUTH_MECHANISMS/g' /etc/mail/sendmail.mc
+    sed -i 's/Addr=127.0.0.1/Addr=0.0.0.0/g' /etc/mail/sendmail.mc
+    m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+    systemctl enable --now sendmail
+
+    cat <<'EOF' > /etc/cron.daily/backup.sh
+#!/bin/bash
+DATE=$(/bin/date +%Y%m%d)
+OLD_DATE=$(date -d "-3 days" +%Y%m%d)
+rm -rf "/data/backup/${OLD_DATE}"
+mkdir -p "/data/backup/${DATE}"
+rsync -avogh /var/lib/mysq* "/data/backup/${DATE}"
+rsync -avogh /home/* "/data/backup/${DATE}"
+EOF
+    chmod 755 /etc/cron.daily/backup.sh
+
+    log_info "=== APM 설치 및 설정 완료 ==="
+    ;;
+no|n|N|NO)
+    echo "APM 설치를 건너뜁니다."
+    ;;
+*)
+    echo "잘못된 입력입니다. yes(y) 또는 no(n)을 입력하세요."
+    ;;
+esac
