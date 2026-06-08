@@ -74,6 +74,27 @@ else
 fi
 log_info "필요 서비스 재시작 절차 종료"
 
+# ────────────────────────────────────────────────────────────
+# U-67: 로그 파일 권한 재설정
+# ────────────────────────────────────────────────────────────
+log_info "로그 파일 권한 재설정 시작 (U-67)"
+for f in /var/log/wtmp /var/log/lastlog; do
+  [[ -f "$f" ]] && chmod 644 "$f"
+done
+for f in /var/log/btmp /var/log/btmp-*; do
+  [[ -f "$f" ]] && chmod 600 "$f"
+done
+log_info "로그 파일 권한 재설정 완료"
+
+# ────────────────────────────────────────────────────────────
+# U-25: world-writable 재처리 (서비스 재시작 이후 최종 정리)
+# ────────────────────────────────────────────────────────────
+log_info "world-writable 재처리 시작 (U-25)"
+find / -xdev -type f -perm -0002 \
+    ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' \
+    -exec chmod o-w {} \; 2>/dev/null
+log_info "world-writable 재처리 완료"
+
 # 요약 생성
 SUMMARY+="NTP 설정: 적용됨 (서버: $NTP_SERVER)\n"
 SUMMARY+="불필요 사용자 삭제: 적용됨 (대상: ${DELETED_USERS:-없음})\n"

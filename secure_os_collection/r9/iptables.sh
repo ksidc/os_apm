@@ -37,11 +37,15 @@ fi
 
 systemctl unmask iptables >/dev/null 2>&1 || true
 
-# 규칙 파일 작성
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-28: INPUT 기본 정책을 DROP으로 변경
+#   변경점: :INPUT ACCEPT → :INPUT DROP
+#   사유: 2026 점검 스크립트가 INPUT 체인에서 DROP/REJECT를 직접 확인
+# ────────────────────────────────────────────────────────────
 cat > "$rules" <<EOF
 *filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 :RH-Firewall-1-INPUT - [0:0]
 
@@ -88,7 +92,6 @@ cat > "$rules" <<EOF
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
 # 기본 차단(DROP) 정책
--A RH-Firewall-1-INPUT -p icmp --icmp-type any -j DROP
 -A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 
 COMMIT

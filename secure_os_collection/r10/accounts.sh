@@ -57,6 +57,9 @@ step1_change_root_password() {
     log_info "root 비밀번호 변경 완료"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-02: 비밀번호 정책 — PASS_MIN_DAYS 기본 1, 일반 사용자(UID 1000~59999)에만 적용
+# ────────────────────────────────────────────────────────────
 set_password_policy() {
     log_info "set_password_policy 시작"
     read -r -p "비밀번호 만료 정책을 설정하시겠습니까? (Y/N): " ans < /dev/tty
@@ -64,15 +67,16 @@ set_password_policy() {
         echo "다음 항목을 입력하세요. Enter 입력 시 기본값이 적용됩니다."
         read -r -p "1. 최대 사용일수 (기본 90): " max_days < /dev/tty
         read -r -p "2. 최소 길이 (기본 8): " min_len < /dev/tty
-        read -r -p "3. 최소 사용일수 (기본 0): " min_days < /dev/tty
+        read -r -p "3. 최소 사용일수 (기본 1): " min_days < /dev/tty
         read -r -p "4. 경고 시작일 (기본 7): " warn_days < /dev/tty
         max_days=${max_days:-90}
         min_len=${min_len:-8}
-        min_days=${min_days:-0}
+        min_days=${min_days:-1}
         warn_days=${warn_days:-7}
 
         log_info "비밀번호 정책 설정: 최대 $max_days일, 최소 길이 $min_len, 최소 사용 $min_days일, 경고 $warn_days일"
         PASSWORD_POLICY_SUMMARY="적용됨(최대 $max_days일, 최소 길이 $min_len, 최소 $min_days일, 경고 $warn_days일)"
+
         mapfile -t user_list < <(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd 2>/dev/null)
         if [ ${#user_list[@]} -eq 0 ]; then
             log_info "정책을 적용할 일반 사용자 계정이 없음"
@@ -174,7 +178,6 @@ create_fallback_and_restrict() {
         return 1
     }
 
-    # Rocky 10 기본 이미지에서 drop-in(01-permitrootlogin.conf)에 PermitRootLogin yes가 남을 수 있어 no로 덮어쓴다.
     log_info "root 원격 로그인 차단 적용"
     local dropin_dir="/etc/ssh/sshd_config.d"
     local dropin_file="${dropin_dir}/01-permitrootlogin.conf"
@@ -198,9 +201,12 @@ EOF
     fi
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-02: pwquality — enforce_for_root 추가
+# ────────────────────────────────────────────────────────────
 configure_pwquality() {
     log_info "configure_pwquality 시작"
-    sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok/d' /etc/security/pwquality.conf
+    sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok\|^enforce_for_root/d' /etc/security/pwquality.conf
     cat <<EOF >> /etc/security/pwquality.conf
 lcredit=-1
 ucredit=-1
@@ -208,10 +214,30 @@ dcredit=-1
 ocredit=-1
 minlen=8
 difok=2
+enforce_for_root
 EOF
-    log_info "pwquality.conf 갱신 완료"
+    log_info "pwquality.conf 갱신 완료 (enforce_for_root 포함)"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-02: pwhistory.conf 생성 — 비밀번호 이력 관리
+# ────────────────────────────────────────────────────────────
+configure_pwhistory() {
+    log_info "configure_pwhistory 시작"
+    cat <<EOF > /etc/security/pwhistory.conf
+enforce_for_root
+remember=4
+file = /etc/security/opasswd
+EOF
+    [ -f /etc/security/opasswd ] || touch /etc/security/opasswd
+    chmod 600 /etc/security/opasswd
+    chown root:root /etc/security/opasswd
+    log_info "pwhistory.conf 설정 완료 (remember=4, enforce_for_root)"
+}
+
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-03: faillock.conf — deny=3, unlock_time=300
+# ────────────────────────────────────────────────────────────
 configure_pam_lockout() {
     log_info "configure_pam_lockout 시작"
     if ! authselect check >/dev/null 2>&1; then
@@ -222,6 +248,18 @@ configure_pam_lockout() {
     authselect enable-feature with-faillock >/dev/null 2>&1 || true
     authselect enable-feature with-pwquality >/dev/null 2>&1 || true
     authselect apply-changes || { log_error "pam_lockout" "authselect 적용 실패"; return 1; }
+
+    local fconf="/etc/security/faillock.conf"
+    if [ -f "$fconf" ]; then
+        sed -i '/^deny/d; /^unlock_time/d; /^silent/d; /^audit/d' "$fconf"
+    fi
+    cat <<EOF >> "$fconf"
+silent
+audit
+deny = 3
+unlock_time = 300
+EOF
+    log_info "faillock.conf 설정 완료 (deny=3, unlock_time=300)"
 
     for pam_file in /etc/pam.d/password-auth /etc/pam.d/system-auth; do
         if [ ! -L "$pam_file" ]; then
@@ -236,13 +274,15 @@ configure_pam_lockout() {
     done
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-06: su 제한 — authselect 이후 su 권한 재설정
+# ────────────────────────────────────────────────────────────
 configure_su_restriction() {
     log_info "configure_su_restriction 시작"
     local su_file="/etc/pam.d/su"
     if ! getent group wheel >/dev/null; then
         groupadd wheel && log_info "wheel 그룹 생성" || { log_error "configure_su_restriction" "wheel 그룹 생성 실패"; return 1; }
     fi
-    set_file_perms /usr/bin/su root:wheel 4750
     if grep -q '^#auth\s\+required\s\+pam_wheel.so\s\+use_uid' "$su_file"; then
         sed -i 's/^#\(auth\s\+required\s\+pam_wheel.so\s\+use_uid\)/\1/' "$su_file" && log_info "pam_wheel.so use_uid 주석 해제"
     elif ! grep -q 'pam_wheel.so.*use_uid' "$su_file"; then
@@ -251,15 +291,18 @@ configure_su_restriction() {
         log_info "pam_wheel.so use_uid 이미 적용됨"
     fi
     authselect apply-changes || { log_error "su_restriction" "authselect 적용 실패"; return 1; }
+
+    # authselect 이후 su 권한 강제 재설정
+    chown root:wheel /usr/bin/su && chmod 4750 /usr/bin/su \
+        && log_info "/usr/bin/su 권한 4750:wheel 재설정 완료" \
+        || log_error "configure_su_restriction" "/usr/bin/su 권한 설정 실패"
 }
 
 enable_wheel_in_sudoers() {
     log_info "enable_wheel_in_sudoers 시작"
 
-    # 1. NOPASSWD 항목이 활성화되어 있다면 다시 주석 처리하여 비밀번호 입력 강제
     sed -i 's/^[[:space:]]*%wheel[[:space:]]\+ALL=(ALL)[[:space:]]\+NOPASSWD/# %wheel\tALL=(ALL)\tNOPASSWD/g' /etc/sudoers
 
-    # 2. 패스워드를 요구하는 기본 wheel 항목만 활성화
     if grep -Eq '^[[:space:]]*#[[:space:]]*%wheel[[:space:]]+ALL=\(ALL\)[[:space:]]+ALL[[:space:]]*$' /etc/sudoers; then
         sed -i 's/^[[:space:]]*#[[:space:]]*\(%wheel[[:space:]]\+ALL=(ALL)[[:space:]]\+ALL[[:space:]]*\)$/\1/' /etc/sudoers
         log_info "sudoers의 wheel(비밀번호 필요) 항목 활성화"
@@ -283,6 +326,7 @@ step1_change_root_password
 set_password_policy
 create_fallback_and_restrict
 configure_pwquality
+configure_pwhistory
 configure_pam_lockout
 configure_su_restriction
 enable_wheel_in_sudoers

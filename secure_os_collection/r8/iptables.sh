@@ -1,19 +1,16 @@
 #!/bin/bash
 # iptables.sh : Rocky 8 방화벽 설정 (사용자 선택 기반)
-# 사용: source 로 호출되거나 단독 실행 가능
 
 set -euo pipefail
 source /usr/local/src/secure_os_collection/r8/common.sh
 
-# 기본값: 22 → 권장 기본값: 38371 → 고객 입력값
 SSH_PORT="${NEW_SSH_PORT:-$(grep -iE '^[# ]*Port[[:space:]]+[0-9]+' /etc/ssh/sshd_config | awk '{print $2}' | tail -n1)}"
 SSH_PORT="${SSH_PORT:-22}"
 
-# iptables 규칙 파일 경로 (전역 변수)
 rules="/etc/sysconfig/iptables"
 
 ########################################
-# 1. firewalld 완전 비활성화 (공통 처리)
+# 1. firewalld 완전 비활성화
 ########################################
 if command -v firewall-cmd >/dev/null 2>&1; then
     systemctl stop firewalld || true
@@ -27,7 +24,6 @@ fi
 ########################################
 log_info "iptables 방화벽을 설정합니다."
 
-# iptables 패키지 설치
 if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
     dnf install -y iptables iptables-services || { log_error "iptables" "설치 실패"; exit 1; }
     log_info "iptables/iptables-services 설치 완료"
@@ -37,11 +33,13 @@ fi
 
 systemctl unmask iptables >/dev/null 2>&1 || true
 
-# 규칙 파일 작성
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-28: INPUT/FORWARD 기본 정책 DROP
+# ────────────────────────────────────────────────────────────
 cat > "$rules" <<EOF
 *filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 :RH-Firewall-1-INPUT - [0:0]
 
@@ -84,11 +82,10 @@ cat > "$rules" <<EOF
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 110 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 143 -j ACCEPT
 
-# MySQL 서비스 포트 (필요 시 차단 가능)
+# MySQL 서비스 포트
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
 # 기본 차단(DROP) 정책
--A RH-Firewall-1-INPUT -p icmp --icmp-type any -j DROP
 -A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 
 COMMIT
@@ -97,7 +94,6 @@ EOF
 chmod 600 "$rules"
 log_info "iptables 규칙 파일 생성: $rules"
 
-# 서비스 적용
 systemctl enable iptables
 systemctl restart iptables || {
     echo "❌ iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요"

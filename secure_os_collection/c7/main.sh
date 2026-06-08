@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# CentOS 7 보안 강화 메인 스크립트
-# 실행: go.sh에서 호출됨
+# CentOS 7 hardening main script
+set -u
 
-set -u  # undefined 변수 에러 시 중단
-
-# 환경 설정 (고정값)
 NTP_SERVER=${NTP_SERVER:-"kr.pool.ntp.org"}
 RSYSLOG_SERVER=${RSYSLOG_SERVER:-"1.224.163.4"}
 MIN_PASSWORD_LENGTH=${MIN_PASSWORD_LENGTH:-8}
@@ -14,171 +11,191 @@ LOG_DIR="/usr/local/src/secure_os_collection/logs"
 LOG_FILE="$LOG_DIR/go_$(date +%Y%m%d_%H%M%S).log"
 RESULT_FILE="$LOG_DIR/result_$(date +%Y%m%d_%H%M%S).log"
 
-# 요약 변수 초기화
 SUMMARY=""
-NEW_SSH_PORT="미변경 (기본 22)"
-PASSWORD_POLICY_SUMMARY="미적용"
-CREATED_USER="미생성"
+NEW_SSH_PORT="not changed (default 22)"
+PASSWORD_POLICY_SUMMARY="not applied"
+CREATED_USER="not created"
 DELETED_USERS=""
 SERVICES_DISABLED=""
 RESTARTED_SERVICES=""
 
 declare -A restarts_needed
 
-# 로그 디렉토리 생성
 mkdir -p "$LOG_DIR" && chmod 700 "$LOG_DIR" || {
-    echo "[ERROR] 로그 디렉토리 $LOG_DIR 생성 실패" >&2
+    echo "[ERROR] Failed to create log directory: $LOG_DIR" >&2
     exit 1
 }
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] 로그 디렉토리 $LOG_DIR 생성 성공" | tee -a "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Log directory ready: $LOG_DIR" | tee -a "$LOG_FILE"
 
-# 공통 함수 로드
 source /usr/local/src/secure_os_collection/c7/common.sh || {
-    echo "[ERROR] common.sh 로드 실패" >&2
-    log_error "main" "common.sh 로드 실패"
+    echo "[ERROR] Failed to load common.sh" >&2
+    log_error "main" "Failed to load common.sh"
     exit 1
 }
 
-# 하위 스크립트 실행
-log_info "main 시작"
+log_info "main start"
 check_root
 
-log_info "system.sh 실행 시작"
+log_info "system.sh start"
 source /usr/local/src/secure_os_collection/c7/system.sh || {
-    log_error "main" "system.sh 실행 실패"
+    log_error "main" "system.sh failed"
     exit 1
 }
-log_info "system.sh 실행 완료"
+log_info "system.sh complete"
 
 while true; do
-    echo "방화벽 시스템을 선택하세요:"
-    echo "  1) iptables 설정"
-    echo "  2) firewalld 설정"
-    echo "  3) 방화벽 미사용 (모두 비활성화)"
-    read -r -p "선택 (1/2/3): " FIREWALL_CHOICE < /dev/tty
+    echo "Select firewall mode:"
+    echo "  1) Configure iptables"
+    echo "  2) Configure firewalld"
+    echo "  3) Disable both firewall services"
+    read -r -p "Choice (1/2/3): " FIREWALL_CHOICE < /dev/tty
     case "$FIREWALL_CHOICE" in
         1|2|3) break ;;
-        *) echo "잘못된 입력입니다. 1, 2, 3 중 하나를 선택해주세요." ;;
+        *) echo "Invalid choice. Enter 1, 2, or 3." ;;
     esac
 done
 
 if [ "$FIREWALL_CHOICE" -eq 1 ]; then
-    log_info "iptables.sh 실행 시작 (iptables 선택)"
+    log_info "iptables.sh start"
     source /usr/local/src/secure_os_collection/c7/iptables.sh || {
-        log_error "main" "iptables.sh 실행 실패"
+        log_error "main" "iptables.sh failed"
         exit 1
     }
-    log_info "iptables.sh 실행 완료"
+    log_info "iptables.sh complete"
 elif [ "$FIREWALL_CHOICE" -eq 2 ]; then
-    log_info "firewalld.sh 실행 시작 (firewalld 선택)"
+    log_info "firewalld.sh start"
     source /usr/local/src/secure_os_collection/c7/firewalld.sh || {
-        log_error "main" "firewalld.sh 실행 실패"
+        log_error "main" "firewalld.sh failed"
         exit 1
     }
-    log_info "firewalld.sh 실행 완료"
+    log_info "firewalld.sh complete"
 else
-    log_info "방화벽 미사용 설정 시작"
+    log_info "Disabling firewalld and iptables"
     systemctl stop firewalld iptables 2>/dev/null || true
     systemctl disable firewalld iptables 2>/dev/null || true
     systemctl mask firewalld iptables 2>/dev/null || true
-    log_info "방화벽 미사용 설정 완료"
+    log_info "Firewall disable complete"
 fi
 
-log_info "accounts.sh 실행 시작"
+log_info "accounts.sh start"
 source /usr/local/src/secure_os_collection/c7/accounts.sh || {
-    log_error "main" "accounts.sh 실행 실패"
+    log_error "main" "accounts.sh failed"
     exit 1
 }
-log_info "accounts.sh 실행 완료"
+log_info "accounts.sh complete"
 
-log_info "services.sh 실행 시작"
+log_info "services.sh start"
 source /usr/local/src/secure_os_collection/c7/services.sh || {
-    log_error "main" "services.sh 실행 실패"
+    log_error "main" "services.sh failed"
     exit 1
 }
-log_info "services.sh 실행 완료"
+log_info "services.sh complete"
 
-# 패키지 업데이트
-log_info "yum update 시작"
+log_info "yum update start"
 yum -y update || {
-    log_error "main" "yum update 실패"
+    log_error "main" "yum update failed"
     exit 1
 }
-log_info "yum update 완료"
-SUMMARY+="패키지 업데이트: 적용됨\n"
+log_info "yum update complete"
+SUMMARY+="Package update: applied\n"
 
-# 서비스 재시작
-log_info "서비스 재시작 시작"
+log_info "로그 파일 권한 재설정 시작 (U-67)"
+for f in /var/log/wtmp /var/log/lastlog; do
+    [ -f "$f" ] && chmod 644 "$f"
+done
+for f in /var/log/btmp /var/log/btmp-*; do
+    [ -f "$f" ] && chmod 600 "$f"
+done
+log_info "로그 파일 권한 재설정 완료"
+
+# ────────────────────────────────────────────────────────────
+# U-06: su 권한 재설정 (yum update 시 util-linux 업데이트로 4755/root:root 복원 방지)
+# ────────────────────────────────────────────────────────────
+log_info "su 권한 재설정 시작 (U-06)"
+chown root:wheel /usr/bin/su && chmod 4750 /usr/bin/su \
+    && log_info "/usr/bin/su 권한 4750 root:wheel 재설정 완료" \
+    || log_error "main" "/usr/bin/su 권한 재설정 실패"
+
+# ────────────────────────────────────────────────────────────
+# U-37: cron.deny 권한 재설정 (yum update 시 cronie 업데이트로 644 복원 방지)
+# ────────────────────────────────────────────────────────────
+log_info "cron.deny 권한 재설정 시작 (U-37)"
+if [ -f /etc/cron.deny ]; then
+    chown root:root /etc/cron.deny
+    chmod 640 /etc/cron.deny
+    log_info "/etc/cron.deny 권한 640 재설정 완료"
+fi
+
 for svc in "${!restarts_needed[@]}"; do
     if [ "${restarts_needed[$svc]}" -eq 1 ]; then
-        systemctl restart "$svc" && log_info "$svc 재시작 성공" || {
-            log_error "main" "$svc 재시작 실패"
+        systemctl restart "$svc" && log_info "$svc restart complete" || {
+            log_error "main" "$svc restart failed"
             exit 1
         }
         RESTARTED_SERVICES+="$svc "
     fi
 done
-log_info "서비스 재시작 완료"
-SUMMARY+="서비스 재시작: 적용됨 (대상: ${RESTARTED_SERVICES:-없음})\n"
+log_info "Service restart phase complete"
+SUMMARY+="Service restart: applied (targets: ${RESTARTED_SERVICES:-none})\n"
 
-# 요약 생성
-SUMMARY+="NTP 설정: 적용됨 (서버: $NTP_SERVER)\n"
-SUMMARY+="불필요 사용자 삭제: 적용됨 (대상: ${DELETED_USERS:-없음})\n"
-SUMMARY+="SSH 포트 변경: $NEW_SSH_PORT\n"
-SUMMARY+="패스워드 정책: $PASSWORD_POLICY_SUMMARY\n"
-SUMMARY+="새 계정 생성: $CREATED_USER\n"
-SUMMARY+="방화벽 설정: 적용됨\n"
-SUMMARY+="SELinux 비활성화: 적용됨\n"
-SUMMARY+="sysctl/limits 튜닝: 적용됨\n"
-SUMMARY+="서비스 비활성화: 적용됨 (대상: ${SERVICES_DISABLED:-없음})\n"
+# ────────────────────────────────────────────────────────────
+# U-25: world-writable 재처리 (서비스 재시작 이후 최종 정리)
+# ────────────────────────────────────────────────────────────
+log_info "world-writable 재처리 시작 (U-25)"
+find / -xdev -type f -perm -0002 \
+    ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' \
+    -exec chmod o-w {} \; 2>/dev/null
+log_info "world-writable 재처리 완료"
 
-# 요약 출력 및 저장
-echo -e "\n=== 실행 결과 요약 ===\n$SUMMARY"
+SUMMARY+="NTP: applied (server: $NTP_SERVER)\n"
+SUMMARY+="Removed users: ${DELETED_USERS:-none}\n"
+SUMMARY+="SSH port: $NEW_SSH_PORT\n"
+SUMMARY+="Password policy: $PASSWORD_POLICY_SUMMARY\n"
+SUMMARY+="Created user: $CREATED_USER\n"
+SUMMARY+="Firewall: applied\n"
+SUMMARY+="SELinux disable: applied\n"
+SUMMARY+="sysctl/limits: applied\n"
+SUMMARY+="Disabled services: ${SERVICES_DISABLED:-none}\n"
+
 echo -e "$SUMMARY" > "$RESULT_FILE"
-log_info "결과 요약 저장: $RESULT_FILE"
+log_info "Summary written: $RESULT_FILE"
 
-# 리부팅 확인
-log_info "모든 작업 완료. 정리 및 재부팅 대기."
+log_info "All tasks complete. Waiting for cleanup/reboot decision"
 
 echo ""
 echo "============================================================================"
-echo " [경고] 'Y' 선택 시 설치 파일(/usr/local/src/secure_os_collection)과"
-echo "        로그 파일이 모두 삭제되며, 즉시 시스템이 재부팅됩니다."
+echo " [WARN] If you choose 'Y', installation files under /usr/local/src/secure_os_collection"
+echo "        will be deleted and the system will reboot immediately."
 echo "============================================================================"
 
 while true; do
-    read -r -p "설치 파일을 삭제하고 시스템을 재부팅하시겠습니까? (Y/N): " confirm_finish < /dev/tty
-    
+    read -r -p "Delete installation files and reboot now? (Y/N): " confirm_finish < /dev/tty
+
     case "$confirm_finish" in
         [Yy]*)
-            log_info "사용자 요청에 의한 파일 삭제 및 재부팅 시작"
-            echo "  → 설치 파일 및 로그 삭제 중..."
-            
-            # 디렉토리 변수 (하드코딩 방지용 로컬 선언)
+            log_info "Cleanup and reboot requested by user"
+            echo "  Removing installation files and temporary files..."
+
             SCRIPT_DIR="/usr/local/src/secure_os_collection"
             ZIP_FILE="/usr/local/src/secure_os_collection.zip"
-            
-            # 1. zip 파일 및 스크립트 디렉토리 삭제
+
             [ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
             [ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
-            
-            # 2. 임시 파일 정리
             rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
-            
-            echo "  → 시스템을 재부팅합니다..."
+
+            echo "  Rebooting now..."
             sleep 1
-            # 파일이 삭제되었어도 셸 메모리에 로드된 명령은 실행됨
             init 6
             break
             ;;
         [Nn]*)
-            log_info "사용자 요청에 의해 정리 및 재부팅 취소됨."
-            echo "  → 파일 삭제 및 재부팅을 취소했습니다."
-            echo "  → 로그 및 스크립트가 유지됩니다."
+            log_info "Cleanup and reboot canceled by user"
+            echo "  Cleanup and reboot canceled."
+            echo "  Logs and scripts remain on the system."
             exit 0
             ;;
         *)
-            echo "잘못된 입력입니다. 'Y' 또는 'N'을 입력해주세요."
+            echo "Invalid input. Enter Y or N."
             ;;
     esac
 done

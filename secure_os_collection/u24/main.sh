@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 24.04 보안 하드닝 메인 스크립트 (r8/r9 스타일과 통일)
+# Ubuntu 22.04/24.04 하드닝 메인 스크립트 (2026 개선판)
 
 set -u
 
@@ -11,14 +11,17 @@ RSYSLOG_SERVER=${RSYSLOG_SERVER:-"1.224.163.4"}
 MIN_PASSWORD_LENGTH=${MIN_PASSWORD_LENGTH:-8}
 SSH_PORT=${SSH_PORT:-38371}
 
-LOG_DIR="/usr/local/src/secure_os_collection/logs"
-LOG_FILE="$LOG_DIR/go_$(date +%Y%m%d_%H%M%S).log"
-RESULT_FILE="$LOG_DIR/result_$(date +%Y%m%d_%H%M%S).log"
-
+LOG_DIR="${LOG_DIR:-/usr/local/src/secure_os_collection/logs}"
 mkdir -p "$LOG_DIR" && chmod 700 "$LOG_DIR" || {
   echo "[ERROR] 로그 디렉터리 $LOG_DIR 생성 실패" >&2
   exit 1
 }
+
+LOG_FILE="$LOG_DIR/u22_$(date +%Y%m%d_%H%M%S).log"
+RESULT_FILE="$LOG_DIR/u22_result_$(date +%Y%m%d_%H%M%S).log"
+touch "$LOG_FILE" "$RESULT_FILE"
+chmod 600 "$LOG_FILE" "$RESULT_FILE"
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] 로그 디렉터리 $LOG_DIR 생성 완료" | tee -a "$LOG_FILE"
 
 source "${SCRIPT_DIR}/common.sh" || {
@@ -38,7 +41,7 @@ RESTARTED_SERVICES=""
 
 check_root
 
-log_info "main 시작"
+log_info "Ubuntu 하드닝을 시작합니다."
 
 source "${SCRIPT_DIR}/system.sh" || {
   log_error "main" "system.sh 실행 실패"
@@ -55,7 +58,19 @@ source "${SCRIPT_DIR}/services.sh" || {
   exit 1
 }
 
-log_info "서비스 재시작 점검 시작"
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-67: 로그 파일 권한 재설정 (apt upgrade 이후 리셋 방지)
+# ────────────────────────────────────────────────────────────
+log_info "로그 파일 권한 재설정 시작 (U-67)"
+for f in /var/log/wtmp /var/log/lastlog; do
+  [[ -f "$f" ]] && chmod 644 "$f"
+done
+for f in /var/log/btmp /var/log/btmp-*; do
+  [[ -f "$f" ]] && chmod 600 "$f"
+done
+log_info "로그 파일 권한 재설정 완료"
+
+log_info "지연된 서비스 재시작 작업 시작"
 if [[ "${#restarts_needed[@]}" -gt 0 ]]; then
   for svc in "${!restarts_needed[@]}"; do
     if systemctl restart "$svc" >/dev/null 2>&1; then
@@ -68,7 +83,16 @@ if [[ "${#restarts_needed[@]}" -gt 0 ]]; then
 else
   log_info "재시작이 필요한 서비스가 없습니다."
 fi
-log_info "서비스 재시작 점검 완료"
+log_info "지연된 서비스 재시작 작업 완료"
+
+# ────────────────────────────────────────────────────────────
+# U-25: world-writable 재처리 (서비스 재시작 이후 최종 정리)
+# ────────────────────────────────────────────────────────────
+log_info "world-writable 재처리 시작 (U-25)"
+find / -xdev -type f -perm -0002 \
+    ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' \
+    -exec chmod o-w {} \; 2>/dev/null
+log_info "world-writable 재처리 완료"
 
 # 요약 생성
 SUMMARY+="NTP 설정: 적용됨 (서버: $NTP_SERVER)\n"
@@ -79,7 +103,6 @@ SUMMARY+="새 계정 생성: $CREATED_USER\n"
 SUMMARY+="서비스 비활성화: 적용됨 (대상: ${SERVICES_DISABLED:-없음})\n"
 SUMMARY+="서비스 재시작: 적용됨 (대상: ${RESTARTED_SERVICES:-없음})\n"
 
-# 요약 출력 및 저장
 echo -e "\n=== 실행 결과 요약 ===\n$SUMMARY"
 echo -e "$SUMMARY" > "$RESULT_FILE"
 log_info "결과 요약 저장: $RESULT_FILE"
@@ -100,20 +123,16 @@ while true; do
             log_info "사용자 요청에 의한 파일 삭제 및 재부팅 시작"
             echo "  → 설치 파일 및 로그 삭제 중..."
             
-            # 디렉토리 변수 (하드코딩 방지용 로컬 선언)
             SCRIPT_DIR="/usr/local/src/secure_os_collection"
             ZIP_FILE="/usr/local/src/secure_os_collection.zip"
             
-            # 1. zip 파일 및 스크립트 디렉토리 삭제
             [ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
             [ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
             
-            # 2. 임시 파일 정리
             rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
             
             echo "  → 시스템을 재부팅합니다..."
             sleep 1
-            # 파일이 삭제되었어도 셸 메모리에 로드된 명령은 실행됨
             init 6
             break
             ;;

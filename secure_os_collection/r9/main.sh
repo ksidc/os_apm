@@ -114,11 +114,39 @@ dnf -y update || {
 log_info "dnf update 완료"
 SUMMARY+="패키지 업데이트: 적용됨\n"
 
+# U-67: 로그 파일 권한 재설정
+log_info "로그 파일 권한 재설정 시작 (U-67)"
+for f in /var/log/wtmp /var/log/lastlog; do
+    [ -f "$f" ] && chmod 644 "$f"
+done
+for f in /var/log/btmp /var/log/btmp-*; do
+    [ -f "$f" ] && chmod 600 "$f"
+done
+log_info "로그 파일 권한 재설정 완료"
+
+# ────────────────────────────────────────────────────────────
+# U-06: su 권한 재설정 (dnf update 시 util-linux 업데이트로 4755/root:root 복원 방지)
+# ────────────────────────────────────────────────────────────
+log_info "su 권한 재설정 시작 (U-06)"
+chown root:wheel /usr/bin/su && chmod 4750 /usr/bin/su \
+    && log_info "/usr/bin/su 권한 4750 root:wheel 재설정 완료" \
+    || log_error "main" "/usr/bin/su 권한 재설정 실패"
+
+# ────────────────────────────────────────────────────────────
+# U-37: cron.deny 권한 재설정 (dnf update 시 cronie 업데이트로 644 복원 방지)
+# ────────────────────────────────────────────────────────────
+log_info "cron.deny 권한 재설정 시작 (U-37)"
+if [ -f /etc/cron.deny ]; then
+    chown root:root /etc/cron.deny
+    chmod 640 /etc/cron.deny
+    log_info "/etc/cron.deny 권한 640 재설정 완료"
+fi
+
 # 서비스 재시작
 log_info "서비스 재시작 시작"
 for svc in "${!restarts_needed[@]}"; do
     if [ "${restarts_needed[$svc]}" -eq 1 ]; then
-        systemctl restart "$svc" && log_info "$svc 재시작 성공" || { 
+        systemctl restart "$svc" && log_info "$svc 재시작 성공" || {
             log_error "main" "$svc 재시작 실패"
             exit 1
         }
@@ -127,6 +155,15 @@ for svc in "${!restarts_needed[@]}"; do
 done
 log_info "서비스 재시작 완료"
 SUMMARY+="서비스 재시작: 적용됨 (대상: ${RESTARTED_SERVICES:-없음})\n"
+
+# ────────────────────────────────────────────────────────────
+# U-25: world-writable 재처리 (서비스 재시작 이후 최종 정리)
+# ────────────────────────────────────────────────────────────
+log_info "world-writable 재처리 시작 (U-25)"
+find / -xdev -type f -perm -0002 \
+    ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' \
+    -exec chmod o-w {} \; 2>/dev/null
+log_info "world-writable 재처리 완료"
 
 # 요약 생성
 SUMMARY+="NTP 설정: 적용됨 (서버: $NTP_SERVER)\n"

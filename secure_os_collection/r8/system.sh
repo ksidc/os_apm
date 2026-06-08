@@ -5,7 +5,7 @@ source /usr/local/src/secure_os_collection/r8/common.sh
 # 시스템 설정 관련 작업
 install_packages() {
     log_info "install_packages 시작"
-    local pkgs=(epel-release chrony rsyslog lsof net-tools psmisc lrzsz screen iftop smartmontools vim unzip wget)
+    local pkgs=(epel-release chrony rsyslog sysstat lsof net-tools psmisc lrzsz screen iftop smartmontools vim unzip wget gcc make autoconf automake libtool)
     for pkg in "${pkgs[@]}"; do
         if rpm -q "$pkg" &>/dev/null; then
             log_info "$pkg 이미 설치됨"
@@ -33,6 +33,47 @@ configure_ntp() {
     else
         log_info "chrony makestep 크론 작업 이미 존재"
     fi
+}
+
+configure_sysstat() {
+    log_info "configure_sysstat 시작"
+    local unit_enabled=0
+
+    if ! rpm -q sysstat >/dev/null 2>&1; then
+        log_error "configure_sysstat" "sysstat 패키지가 설치되어 있지 않습니다."
+        exit 1
+    fi
+
+    if systemctl list-unit-files | grep -q '^sysstat.service'; then
+        systemctl enable --now sysstat >/dev/null 2>&1 || {
+            log_error "configure_sysstat" "sysstat 서비스 활성화 실패"
+            exit 1
+        }
+        unit_enabled=1
+    fi
+
+    if systemctl list-unit-files | grep -q '^sysstat-collect.timer'; then
+        systemctl enable --now sysstat-collect.timer >/dev/null 2>&1 || {
+            log_error "configure_sysstat" "sysstat-collect.timer 활성화 실패"
+            exit 1
+        }
+        unit_enabled=1
+    fi
+
+    if systemctl list-unit-files | grep -q '^sysstat-summary.timer'; then
+        systemctl enable --now sysstat-summary.timer >/dev/null 2>&1 || {
+            log_error "configure_sysstat" "sysstat-summary.timer 활성화 실패"
+            exit 1
+        }
+        unit_enabled=1
+    fi
+
+    if [ "$unit_enabled" -eq 0 ]; then
+        log_error "configure_sysstat" "활성화할 sysstat 서비스 또는 timer 유닛을 찾지 못했습니다."
+        exit 1
+    fi
+
+    log_info "sysstat 관련 서비스/timer 활성화 완료"
 }
 
 configure_history_timeout() {
@@ -74,14 +115,13 @@ configure_file_permissions() {
 configure_motd() {
     log_info "configure_motd 시작"
 
-    # 버전 정보 로드 (없으면 unknown 사용)
     SCRIPT_VERSION="unknown"
     if [[ -f /usr/local/src/secure_os_collection/version.conf ]]; then
         source /usr/local/src/secure_os_collection/version.conf
     fi
 
     cat <<EOF > /etc/motd
-"********************************************************************
+********************************************************************
 *                                                                  *
 * 본 시스템은 허가된 사용자만 이용하실 수 있습니다.                *
 * 부당한 방법으로 전산망에 접속하거나 정보를 삭제/변경/유출하는    *
@@ -140,7 +180,7 @@ step2_change_ssh_port() {
         read -r -p "변경 없이 진행? (Y/N): " proceed < /dev/tty
         if [[ "$proceed" =~ ^[Yy]$ ]]; then
             log_info "SSH 포트 변경 생략"
-            NEW_SSH_PORT="$old_port"   # 숫자만 저장
+            NEW_SSH_PORT="$old_port"
             return
         else
             step2_change_ssh_port
@@ -155,7 +195,6 @@ step2_change_ssh_port() {
     NEW_SSH_PORT="$new_port"
     restarts_needed["sshd"]=1
 }
-
 
 configure_sysctl() {
     log_info "configure_sysctl 시작"
@@ -213,10 +252,110 @@ disable_selinux() {
     log_info "SELinux 비활성화 완료"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-30: UMASK 설정
+# ────────────────────────────────────────────────────────────
+configure_umask() {
+    log_info "configure_umask 시작 (U-30)"
+    for f in /etc/profile /etc/bashrc; do
+        if [ -f "$f" ]; then
+            # if/else 블록 구조를 유지하면서 umask 값만 022로 변경
+            sed -i 's/umask[[:space:]]\+[0-9]\+/umask 022/g' "$f"
+            log_info "${f}의 umask 값을 022로 변경"
+        fi
+    done
+    log_info "UMASK 설정 완료"
+}
+
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-37: /etc/crontab 권한 강화
+# ────────────────────────────────────────────────────────────
+configure_crontab_perms() {
+    log_info "configure_crontab_perms 시작 (U-37)"
+    if [ -f /etc/crontab ]; then
+        chown root:root /etc/crontab
+        chmod 640 /etc/crontab
+        log_info "/etc/crontab 권한 640 설정 완료"
+    fi
+    if [ -f /etc/cron.deny ]; then
+        chown root:root /etc/cron.deny
+        chmod 640 /etc/cron.deny
+        log_info "/etc/cron.deny 권한 640 설정 완료"
+    fi
+    log_info "crontab 권한 설정 완료"
+}
+
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-67: wtmp/btmp tmpfiles.d 오버라이드
+# systemd-tmpfiles.d가 부팅 시 664/660으로 리셋하는 것을 방지
+# ────────────────────────────────────────────────────────────
+configure_log_file_perms() {
+    log_info "configure_log_file_perms 시작 (U-67 tmpfiles.d 오버라이드)"
+    local tf="/etc/tmpfiles.d/99-hardening-perms.conf"
+    cat > "$tf" << 'EOF'
+# Override systemd default wtmp/btmp permissions (KISA hardening)
+z /var/log/wtmp 0644 root utmp -
+z /var/log/btmp 0600 root utmp -
+EOF
+    systemd-tmpfiles --create "$tf" >/dev/null 2>&1 || log_warn "tmpfiles --create 실패 (다음 부팅 시 적용됨)"
+    chmod 644 /var/log/wtmp 2>/dev/null || true
+    chmod 600 /var/log/btmp 2>/dev/null || true
+    log_info "wtmp/btmp 권한 고정 완료 (644/600)"
+}
+
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-25: world writable 파일 제거
+# ────────────────────────────────────────────────────────────
+fix_world_writable() {
+    log_info "fix_world_writable 시작 (U-25)"
+    local cnt=0
+    while IFS= read -r f; do
+        chmod o-w "$f" && log_info "world writable 제거: $f" \
+            || log_error "fix_world_writable" "$f 권한 변경 실패"
+        cnt=$((cnt + 1))
+    done < <(find / -xdev -type f -perm -0002 ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' 2>/dev/null)
+    log_info "world writable 파일 ${cnt}개 처리 완료"
+}
+
 # 시스템 설정 실행
+configure_snoopy() {
+    log_info "configure_snoopy 시작"
+    local version="2.5.2"
+    local url="https://github.com/a2o/snoopy/releases/download/snoopy-${version}/snoopy-${version}.tar.gz"
+
+    if grep -q 'libsnoopy' /etc/ld.so.preload 2>/dev/null; then
+        log_info "snoopy 이미 활성화됨"
+        return 0
+    fi
+
+    cd /usr/local/src || { log_error "configure_snoopy" "디렉터리 이동 실패"; return 1; }
+    wget -q "$url" -O "snoopy-${version}.tar.gz" || { log_error "configure_snoopy" "다운로드 실패"; return 1; }
+    tar -xzf "snoopy-${version}.tar.gz" || { log_error "configure_snoopy" "압축 해제 실패"; return 1; }
+    cd "snoopy-${version}" || { log_error "configure_snoopy" "소스 디렉터리 이동 실패"; return 1; }
+    ./configure >/dev/null 2>&1 || { log_error "configure_snoopy" "configure 실패"; return 1; }
+    make >/dev/null 2>&1 || { log_error "configure_snoopy" "make 실패"; return 1; }
+    make install >/dev/null 2>&1 || { log_error "configure_snoopy" "make install 실패"; return 1; }
+    local lib; lib=$(find /usr/local/lib /usr/local/lib64 -maxdepth 2 \( -name 'libsnoopy.so' -o -name 'libsnoopy.so.0' \) 2>/dev/null | sort | head -1)
+    [ -z "$lib" ] && { log_error "configure_snoopy" "libsnoopy.so 탐색 실패"; return 1; }
+    grep -qxF "$lib" /etc/ld.so.preload 2>/dev/null || echo "$lib" >> /etc/ld.so.preload
+    ldconfig
+
+    cat > /etc/snoopy.ini << 'SNOOPY_CONF'
+[snoopy]
+message_format = "[login:%{login}][uid:%{uid}][user:%{username}][tty:%{tty}][cwd:%{cwd}]: %{cmdline}"
+syslog_facility = LOG_AUTH
+syslog_level = LOG_INFO
+SNOOPY_CONF
+
+    cd /usr/local/src
+    rm -rf "snoopy-${version}" "snoopy-${version}.tar.gz"
+    log_info "snoopy v${version} 설치 및 활성화 완료"
+}
+
 log_info "시스템 설정 작업 시작"
 install_packages
 configure_ntp
+configure_sysstat
 configure_history_timeout
 configure_etc_perms
 configure_file_permissions
@@ -228,4 +367,9 @@ configure_limits
 configure_rc_local
 configure_rsyslog
 disable_selinux
+configure_umask
+configure_crontab_perms
+configure_log_file_perms
+fix_world_writable
+configure_snoopy
 log_info "시스템 설정 작업 완료"

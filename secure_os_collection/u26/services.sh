@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 22.04 서비스 및 네트워크 설정
+# Ubuntu 26.04 서비스 및 네트워크 설정
 
 if [[ -z "${SECURE_OS_COMMON_LOADED:-}" ]]; then
   source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"

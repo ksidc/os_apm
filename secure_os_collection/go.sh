@@ -63,7 +63,7 @@ detect_os() {
 
     # OS 서브디렉토리 매핑
     case "$OS_ID" in
-        centos)
+            centos)
             if [ "$MAJOR_VER" = "7" ]; then
                 OS_SUBDIR="c7"
             else
@@ -92,6 +92,8 @@ detect_os() {
                 OS_SUBDIR="u22"
             elif [ "$MAJOR_VER" = "24" ]; then
                 OS_SUBDIR="u24"
+            elif [ "$MAJOR_VER" = "26" ]; then
+                OS_SUBDIR="u26"
             else
                 log "ERROR: Ubuntu $OS_VER 미지원."
                 exit 1

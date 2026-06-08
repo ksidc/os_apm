@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 22.04 공통 유틸리티
+# Ubuntu 26.04 공통 유틸리티
 
 if [[ -n "${SECURE_OS_COMMON_LOADED:-}" ]]; then
   return 0
@@ -105,5 +105,3 @@ prompt_yes_no() {
     esac
   done
 }
-
-

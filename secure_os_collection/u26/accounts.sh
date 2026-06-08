@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 22.04/24.04 계정 및 인증 설정 (2026 개선판)
+# Ubuntu 26.04 계정 및 인증 설정 (2026 개선판)
 
 if [[ -z "${SECURE_OS_COMMON_LOADED:-}" ]]; then
   source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
@@ -182,7 +182,7 @@ setup_fallback_account_and_restrict_root() {
     while true; do
       read_from_tty "생성할 관리자 계정 이름을 입력하세요 (취소하려면 'cancel' 또는 'q' 입력): " fallback_user
       [[ -z "$fallback_user" ]] && { echo "계정 이름을 입력해주세요."; continue; }
-      
+
       if [[ "${fallback_user,,}" =~ ^(!?cancel|!chain|quit|exit|q|!취소)$ ]]; then
         echo "계정 생성을 취소합니다."
         create_fallback=false
@@ -322,67 +322,32 @@ configure_pam_lockout() {
   log_info "configure_pam_lockout 실행"
   local pam_auth="/etc/pam.d/common-auth"
   local pam_account="/etc/pam.d/common-account"
+  local preauth_line="auth    required pam_faillock.so preauth silent deny=3 unlock_time=300"
+  local authfail_line="auth    [default=die] pam_faillock.so authfail deny=3 unlock_time=300"
+  local authsucc_line="auth    sufficient pam_faillock.so authsucc deny=3 unlock_time=300"
+  local account_line="account required pam_faillock.so"
 
-  local use_faillock=false
-  if command_exists faillock; then
-    local candidate
-    for candidate in \
-      /usr/lib/security/pam_faillock.so \
-      /usr/lib/x86_64-linux-gnu/security/pam_faillock.so \
-      /lib/security/pam_faillock.so \
-      /lib/x86_64-linux-gnu/security/pam_faillock.so
-    do
-      if [[ -f "$candidate" ]]; then
-        use_faillock=true
-        break
-      fi
-    done
+  sed -i '/pam_faillock.so/d' "$pam_auth"
+  sed -i '/pam_faillock.so/d' "$pam_account"
+
+  if ! grep -Fxq "$preauth_line" "$pam_auth"; then
+    sed -i "/pam_unix\.so/ i $preauth_line" "$pam_auth"
   fi
-
-  if [[ "$use_faillock" == true ]]; then
-    local preauth_line="auth    required pam_faillock.so preauth silent deny=3 unlock_time=300"
-    local authfail_line="auth    [default=die] pam_faillock.so authfail deny=3 unlock_time=300"
-    local authsucc_line="auth    sufficient pam_faillock.so authsucc deny=3 unlock_time=300"
-    local account_line="account required pam_faillock.so"
-
-    sed -i '/pam_faillock.so/d' "$pam_auth"
-    sed -i '/pam_faillock.so/d' "$pam_account"
-
-    if ! grep -Fxq "$preauth_line" "$pam_auth"; then
-      sed -i "/pam_unix\.so/ i $preauth_line" "$pam_auth"
-    fi
-    if ! grep -Fxq "$authfail_line" "$pam_auth"; then
-      sed -i "/pam_unix\.so/ a $authfail_line" "$pam_auth"
-    fi
-    if ! grep -Fxq "$authsucc_line" "$pam_auth"; then
-      if grep -q 'pam_faillock\.so authfail' "$pam_auth"; then
-        sed -i "/pam_faillock\.so authfail/a $authsucc_line" "$pam_auth"
-      else
-        sed -i "/pam_unix\.so/ a $authsucc_line" "$pam_auth"
-      fi
-    fi
-    if ! grep -Eq '^\s*account\s+required\s+pam_faillock\.so' "$pam_account"; then
-      echo "$account_line" >> "$pam_account"
-    fi
-    faillock --reset >/dev/null 2>&1 || true
-    log_info "pam_faillock 기반 로그인 실패 잠금 정책을 적용했습니다. (deny=3, unlock_time=300)"
-  else
-    local auth_line="auth    required pam_tally2.so deny=3 onerr=fail unlock_time=300 even_deny_root"
-    local account_line="account required pam_tally2.so"
-
-    if ! grep -Fxq "$auth_line" "$pam_auth"; then
-      if grep -q 'pam_tally2.so' "$pam_auth"; then
-        sed -i "s|^[[:space:]]*auth.*pam_tally2\.so.*|$auth_line|" "$pam_auth"
-      else
-        sed -i "/pam_unix\.so/ a $auth_line" "$pam_auth"
-      fi
-    fi
-
-    if ! grep -Fxq "$account_line" "$pam_account"; then
-      echo "$account_line" >> "$pam_account"
-    fi
-    log_warn "pam_faillock을 사용할 수 없어 pam_tally2 기반 잠금 정책을 적용했습니다. (deny=3, unlock_time=300)"
+  if ! grep -Fxq "$authfail_line" "$pam_auth"; then
+    sed -i "/pam_unix\.so/ a $authfail_line" "$pam_auth"
   fi
+  if ! grep -Fxq "$authsucc_line" "$pam_auth"; then
+    if grep -q 'pam_faillock\.so authfail' "$pam_auth"; then
+      sed -i "/pam_faillock\.so authfail/a $authsucc_line" "$pam_auth"
+    else
+      sed -i "/pam_unix\.so/ a $authsucc_line" "$pam_auth"
+    fi
+  fi
+  if ! grep -Eq '^\s*account\s+required\s+pam_faillock\.so' "$pam_account"; then
+    echo "$account_line" >> "$pam_account"
+  fi
+  faillock --reset >/dev/null 2>&1 || true
+  log_info "pam_faillock 기반 로그인 실패 잠금 정책을 적용했습니다. (deny=3, unlock_time=300)"
 }
 
 # ────────────────────────────────────────────────────────────

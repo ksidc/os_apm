@@ -310,6 +310,30 @@ configure_pass_min_length() {
   fi
 }
 
+configure_pwquality() {
+  log_info "configure_pwquality 실행"
+  if ! dpkg -s libpam-pwquality >/dev/null 2>&1; then
+    wait_for_apt_lock
+    apt install -y libpam-pwquality || { log_warn "libpam-pwquality 설치 실패"; return 1; }
+    log_info "libpam-pwquality 설치 완료"
+  fi
+
+  local conf="/etc/security/pwquality.conf"
+  if [[ -f "$conf" ]]; then
+    sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok\|^enforce_for_root/d' "$conf"
+  fi
+  cat <<EOF >> "$conf"
+lcredit=-1
+ucredit=-1
+dcredit=-1
+ocredit=-1
+minlen=8
+difok=2
+enforce_for_root
+EOF
+  log_info "pwquality.conf 설정 완료 (enforce_for_root 포함)"
+}
+
 configure_pam_lockout() {
   log_info "로그인 실패 잠금 정책(pam_tally2) 설정"
   local pam_auth="/etc/pam.d/common-auth"
@@ -337,6 +361,20 @@ configure_pam_lockout() {
     echo "fail_interval = 900"
     echo "unlock_time = 300"
   } > "$faillock_conf"
+}
+
+# ────────────────────────────────────────────────────────────
+# U-11: sync 계정 shell을 nologin으로 변경 (삭제 대신 shell 제한)
+# ────────────────────────────────────────────────────────────
+configure_sync_shell() {
+  log_info "sync 계정 shell 변경 시작 (U-11)"
+  if getent passwd sync &>/dev/null; then
+    usermod -s /usr/sbin/nologin sync \
+      && log_info "sync 계정 shell을 /usr/sbin/nologin으로 변경 완료" \
+      || log_warn "sync 계정 shell 변경 실패"
+  else
+    log_info "sync 계정 없음"
+  fi
 }
 
 configure_su_restriction() {
@@ -368,7 +406,9 @@ perform_account_hardening() {
   configure_password_policy
   setup_fallback_account_and_restrict_root
   configure_pass_min_length
+  configure_pwquality
   configure_pam_lockout
+  configure_sync_shell
   configure_su_restriction
   update_normal_users_list
   echo "최종 일반 사용자 목록: $NORMAL_USERS_LIST"

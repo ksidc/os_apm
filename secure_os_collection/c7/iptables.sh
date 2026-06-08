@@ -52,8 +52,8 @@ systemctl unmask iptables >/dev/null 2>&1 || true
 # iptables 규칙 작성
 cat > "$RULES_FILE" <<EOF
 *filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 :RH-Firewall-1-INPUT - [0:0]
 
@@ -100,7 +100,6 @@ cat > "$RULES_FILE" <<EOF
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
 # 기본 차단(DROP) 정책
--A RH-Firewall-1-INPUT -p icmp --icmp-type any -j DROP
 -A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 
 COMMIT

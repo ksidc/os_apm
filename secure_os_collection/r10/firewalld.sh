@@ -52,6 +52,8 @@ firewall-cmd --permanent --zone=public --add-port=110/tcp
 firewall-cmd --permanent --zone=public --add-port=143/tcp
 # MySQL 포트
 firewall-cmd --permanent --zone=public --add-port=3306/tcp
+# ICMP
+firewall-cmd --permanent --zone=public --add-protocol=icmp
 
 # 기본 차단(DROP) 정책
 firewall-cmd --permanent --zone=public --set-target=DROP

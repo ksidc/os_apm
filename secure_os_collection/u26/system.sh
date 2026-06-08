@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 22.04/24.04 시스템 기본 설정 (2026 개선판)
+# Ubuntu 26.04 시스템 기본 설정 (2026 개선판)
 
 if [[ -z "${SECURE_OS_COMMON_LOADED:-}" ]]; then
   source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"

@@ -48,6 +48,9 @@ step1_change_root_password() {
     log_info "root 비밀번호 설정 완료"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-02: 비밀번호 정책 — 기본값을 2026 기준으로 변경
+# ────────────────────────────────────────────────────────────
 set_password_policy() {
     log_info "set_password_policy 시작"
     read -r -p "패스워드 만료 정책을 설정하시겠습니까? (Y/N): " ans < /dev/tty
@@ -55,11 +58,11 @@ set_password_policy() {
         echo "다음 항목에 대해 값을 입력합니다. (Enter 입력 시 기본값 적용)"
         read -r -p "1. 최대 사용일수 (default: 90): " max_days < /dev/tty
         read -r -p "2. 최소 길이 (default: 8): " min_len < /dev/tty
-        read -r -p "3. 최소 사용일수 (default: 0): " min_days < /dev/tty
+        read -r -p "3. 최소 사용일수 (default: 1): " min_days < /dev/tty
         read -r -p "4. 경고일수 (default: 7): " warn_days < /dev/tty
         max_days=${max_days:-90}
         min_len=${min_len:-8}
-        min_days=${min_days:-0}
+        min_days=${min_days:-1}
         warn_days=${warn_days:-7}
 
         log_info "패스워드 정책 설정: 최대 $max_days일, 최소 길이 $min_len, 최소 $min_days일, 경고 $warn_days일"
@@ -150,13 +153,11 @@ create_fallback_and_restrict() {
     log_info "root 원격 로그인 제한 적용"
     restarts_needed["sshd"]=1
 
-    # Rocky 9.6 기본 이미지에는 /etc/ssh/sshd_config.d/01-permitrootlogin.conf 에 PermitRootLogin yes 가 남아 있을 수 있다.
-    # drop-in을 no로 재작성하여 root 원격 로그인을 확실히 차단한다.
     local dropin_dir="/etc/ssh/sshd_config.d"
     local dropin_file="$dropin_dir/01-permitrootlogin.conf"
     if mkdir -p "$dropin_dir"; then
         cat <<'EOF' > "$dropin_file"
- PermitRootLogin no
+PermitRootLogin no
 EOF
         log_info "sshd drop-in (${dropin_file})에 PermitRootLogin no 적용"
     else
@@ -171,9 +172,12 @@ EOF
     } >> "$LOG_FILE"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-02: pwquality — enforce_for_root 추가
+# ────────────────────────────────────────────────────────────
 configure_pwquality() {
     log_info "configure_pwquality 시작"
-    sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok/d' /etc/security/pwquality.conf
+    sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok\|^enforce_for_root/d' /etc/security/pwquality.conf
     cat <<EOF >> /etc/security/pwquality.conf
 lcredit=-1
 ucredit=-1
@@ -181,29 +185,53 @@ dcredit=-1
 ocredit=-1
 minlen=8
 difok=2
+enforce_for_root
 EOF
-    log_info "pwquality.conf 설정 완료"
+    log_info "pwquality.conf 설정 완료 (enforce_for_root 포함)"
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 신규] U-02: pwhistory.conf 생성 — 비밀번호 이력 관리
+# ────────────────────────────────────────────────────────────
+configure_pwhistory() {
+    log_info "configure_pwhistory 시작"
+    cat <<EOF > /etc/security/pwhistory.conf
+enforce_for_root
+remember=4
+file = /etc/security/opasswd
+EOF
+    [ -f /etc/security/opasswd ] || touch /etc/security/opasswd
+    chmod 600 /etc/security/opasswd
+    chown root:root /etc/security/opasswd
+    log_info "pwhistory.conf 설정 완료 (remember=4, enforce_for_root)"
+}
+
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-03: faillock.conf — deny=3, unlock_time=300 명시
+# ────────────────────────────────────────────────────────────
 configure_pam_lockout() {
     log_info "configure_pam_lockout 시작"
-    # authselect가 관리하는 PAM 파일(system-auth,password-auth)을 직접 수정하지 말 것!
-    # 표준 프로필 + 기능 토글로만 설정한다.
     if ! authselect check >/dev/null 2>&1; then
         log_info "authselect check 실패 → 프로필 강제 선택"
         authselect select sssd --force || { log_error "pam_lockout" "authselect select 실패"; return 1; }
     fi
 
-    # faillock 기능 활성화
     authselect enable-feature with-faillock >/dev/null 2>&1 || true
-    
-    # pwquality 기능도 함께 활성화(이미 활성화되어 있으면 no-op)
     authselect enable-feature with-pwquality >/dev/null 2>&1 || true
-
-    # 변경 적용
     authselect apply-changes || { log_error "pam_lockout" "authselect 적용 실패"; return 1; }
 
-    # 검증: 심볼릭 링크 상태 및 faillock 라인 존재 여부 확인(읽기 전용)
+    local fconf="/etc/security/faillock.conf"
+    if [ -f "$fconf" ]; then
+        sed -i '/^deny/d; /^unlock_time/d; /^silent/d; /^audit/d' "$fconf"
+    fi
+    cat <<EOF >> "$fconf"
+silent
+audit
+deny = 3
+unlock_time = 300
+EOF
+    log_info "faillock.conf 설정 완료 (deny=3, unlock_time=300)"
+
     for pam_file in /etc/pam.d/password-auth /etc/pam.d/system-auth; do
         if [ ! -L "$pam_file" ]; then
             log_error "pam_lockout" "$pam_file 가 심볼릭 링크가 아님(비정상)"
@@ -217,6 +245,9 @@ configure_pam_lockout() {
     done
 }
 
+# ────────────────────────────────────────────────────────────
+# [2026 수정] U-06: su 제한 — authselect 이후 su 권한 재설정
+# ────────────────────────────────────────────────────────────
 configure_su_restriction() {
     log_info "configure_su_restriction 시작"
     local su_file="/etc/pam.d/su"
@@ -224,7 +255,6 @@ configure_su_restriction() {
         groupadd wheel && log_info "wheel group 생성" \
             || { log_error "configure_su_restriction" "wheel group 생성 실패"; return 1; }
     fi
-    set_file_perms /usr/bin/su root:wheel 4750
     if grep -q '^#auth\s\+required\s\+pam_wheel.so\s\+use_uid' "$su_file"; then
         sed -i 's/^#\(auth\s\+required\s\+pam_wheel.so\s\+use_uid\)/\1/' "$su_file" \
             && log_info "pam_wheel.so use_uid 라인 활성화 완료"
@@ -235,6 +265,10 @@ configure_su_restriction() {
         log_info "pam_wheel.so use_uid 설정 이미 적용됨"
     fi
     authselect apply-changes || { log_error "su_restriction" "authselect 적용 실패"; return 1; }
+
+    chown root:wheel /usr/bin/su && chmod 4750 /usr/bin/su \
+        && log_info "/usr/bin/su 권한 4750:wheel 재설정 완료" \
+        || log_error "configure_su_restriction" "/usr/bin/su 권한 설정 실패"
 }
 
 # 계정 관련 작업 실행
@@ -245,6 +279,7 @@ step1_change_root_password
 set_password_policy
 create_fallback_and_restrict
 configure_pwquality
+configure_pwhistory
 configure_pam_lockout
 configure_su_restriction
 log_info "계정 관련 작업 완료"

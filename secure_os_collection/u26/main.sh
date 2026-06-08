@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Ubuntu 22.04/24.04 하드닝 메인 스크립트 (2026 개선판)
+# Ubuntu 26.04 하드닝 메인 스크립트 (2026 개선판)
 
 set -u
 
@@ -17,8 +17,8 @@ mkdir -p "$LOG_DIR" && chmod 700 "$LOG_DIR" || {
   exit 1
 }
 
-LOG_FILE="$LOG_DIR/u22_$(date +%Y%m%d_%H%M%S).log"
-RESULT_FILE="$LOG_DIR/u22_result_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="$LOG_DIR/u26_$(date +%Y%m%d_%H%M%S).log"
+RESULT_FILE="$LOG_DIR/u26_result_$(date +%Y%m%d_%H%M%S).log"
 touch "$LOG_FILE" "$RESULT_FILE"
 chmod 600 "$LOG_FILE" "$RESULT_FILE"
 
@@ -58,18 +58,6 @@ source "${SCRIPT_DIR}/services.sh" || {
   exit 1
 }
 
-# ────────────────────────────────────────────────────────────
-# [2026 신규] U-67: 로그 파일 권한 재설정 (apt upgrade 이후 리셋 방지)
-# ────────────────────────────────────────────────────────────
-log_info "로그 파일 권한 재설정 시작 (U-67)"
-for f in /var/log/wtmp /var/log/lastlog; do
-  [[ -f "$f" ]] && chmod 644 "$f"
-done
-for f in /var/log/btmp /var/log/btmp-*; do
-  [[ -f "$f" ]] && chmod 600 "$f"
-done
-log_info "로그 파일 권한 재설정 완료"
-
 log_info "지연된 서비스 재시작 작업 시작"
 if [[ "${#restarts_needed[@]}" -gt 0 ]]; then
   for svc in "${!restarts_needed[@]}"; do
@@ -84,6 +72,18 @@ else
   log_info "재시작이 필요한 서비스가 없습니다."
 fi
 log_info "지연된 서비스 재시작 작업 완료"
+
+# ────────────────────────────────────────────────────────────
+# U-67: 로그 파일 권한 재설정 (서비스 재시작 이후 재강제)
+# ────────────────────────────────────────────────────────────
+log_info "로그 파일 권한 재설정 시작 (U-67)"
+for f in /var/log/wtmp /var/log/lastlog; do
+  [[ -f "$f" ]] && chmod 644 "$f"
+done
+for f in /var/log/btmp /var/log/btmp-*; do
+  [[ -f "$f" ]] && chmod 600 "$f"
+done
+log_info "로그 파일 권한 재설정 완료"
 
 # ────────────────────────────────────────────────────────────
 # U-25: world-writable 재처리 (서비스 재시작 이후 최종 정리)
@@ -117,20 +117,20 @@ echo "==========================================================================
 
 while true; do
     read -r -p "설치 파일을 삭제하고 시스템을 재부팅하시겠습니까? (Y/N): " confirm_finish < /dev/tty
-    
+
     case "$confirm_finish" in
         [Yy]*)
             log_info "사용자 요청에 의한 파일 삭제 및 재부팅 시작"
             echo "  → 설치 파일 및 로그 삭제 중..."
-            
+
             SCRIPT_DIR="/usr/local/src/secure_os_collection"
             ZIP_FILE="/usr/local/src/secure_os_collection.zip"
-            
+
             [ -d "$SCRIPT_DIR" ] && rm -rf "$SCRIPT_DIR"
             [ -f "$ZIP_FILE" ] && rm -f "$ZIP_FILE"
-            
+
             rm -f /tmp/script_* /tmp/*.tmp 2>/dev/null || true
-            
+
             echo "  → 시스템을 재부팅합니다..."
             sleep 1
             init 6

@@ -48,7 +48,7 @@ disable_dos_services() {
     log_info "disable_dos_services 시작"
     for svc in echo discard daytime chargen; do
         if [ -f /etc/xinetd.d/$svc ]; then
-            sed -i 's/disable *= *no/disable yes/' /etc/xinetd.d/$svc
+            sed -i 's/disable *= *no/disable = yes/' /etc/xinetd.d/$svc
             log_info "$svc 서비스 비활성화"
             SERVICES_DISABLED+="$svc "
         fi
