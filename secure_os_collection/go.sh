@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# go.sh: OS 감지 후 secure_os_collection/OS/ 하위의 main.sh 실행
+# go.sh: CentOS 6.10·7, Rocky 8~10, Ubuntu 18~26을 감지해 OS별 main.sh 실행
 # 실행: sudo bash /usr/local/src/secure_os_collection/go.sh
 # 기반: KISA 가이드 Unix 섹션 (U-01~U-72) 준수 보안 강화
 
@@ -15,59 +15,42 @@ check_crlf() {
 }
 check_crlf
 
-set -e  # 오류 시 중단
+set -e
 
 # 루트 권한 확인
 if [ "$EUID" -ne 0 ]; then
-    echo "ERROR: root 권한으로 실행하세요 (sudo bash go.sh)."
+    echo "ERROR: root 권한으로 실행하세요 (sudo bash go.sh)." >&2
     exit 1
 fi
 
 # 변수 정의
-BASE_DIR=$(dirname "$(realpath "$0")")  # /usr/local/src/secure_os_collection/
+BASE_DIR=$(cd "$(dirname "$0")" && pwd -P)
 SECURE_COLLECTION_DIR="$BASE_DIR"
-LOG_DIR="$BASE_DIR/logs"
-LOG_FILE="$LOG_DIR/go_$(date +%Y%m%d_%H%M%S).log"
-
-# 로그 함수
-log() {
-    # 로그 파일 디렉토리가 존재할 때만 tee 실행 (삭제된 경우 에러 방지)
-    if [ -d "$LOG_DIR" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
-    else
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
-    fi
-}
-
-# 로그 디렉토리 생성
-mkdir -p "$LOG_DIR" && chmod 700 "$LOG_DIR" || { 
-    echo "ERROR: 로그 디렉토리 $LOG_DIR 생성 실패" >&2
-    exit 1
-}
-log "로그 디렉토리 $LOG_DIR 생성 성공"
 
 # OS 감지 함수
 detect_os() {
-    log "OS 감지 시작"
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS_ID=$ID
         OS_VER=$VERSION_ID
+    elif [ -f /etc/centos-release ] && grep -q '^CentOS release 6\.10' /etc/centos-release; then
+        OS_ID="centos"
+        OS_VER="6.10"
     else
-        log "ERROR: /etc/os-release 파일 없음. OS 감지 실패."
+        echo "ERROR: OS 버전 파일을 확인할 수 없습니다." >&2
         exit 1
     fi
 
-    # 메이저 버전 추출
     MAJOR_VER="${OS_VER%%.*}"
 
-    # OS 서브디렉토리 매핑
     case "$OS_ID" in
-            centos)
-            if [ "$MAJOR_VER" = "7" ]; then
+        centos)
+            if [ "$MAJOR_VER" = "6" ]; then
+                OS_SUBDIR="c6"
+            elif [ "$MAJOR_VER" = "7" ]; then
                 OS_SUBDIR="c7"
             else
-                log "ERROR: CentOS $OS_VER 미지원."
+                echo "ERROR: CentOS $OS_VER 미지원." >&2
                 exit 1
             fi
             ;;
@@ -79,7 +62,7 @@ detect_os() {
             elif [ "$MAJOR_VER" = "10" ]; then
                 OS_SUBDIR="r10"
             else
-                log "ERROR: Rocky $OS_VER 미지원."
+                echo "ERROR: Rocky $OS_VER 미지원." >&2
                 exit 1
             fi
             ;;
@@ -95,45 +78,33 @@ detect_os() {
             elif [ "$MAJOR_VER" = "26" ]; then
                 OS_SUBDIR="u26"
             else
-                log "ERROR: Ubuntu $OS_VER 미지원."
+                echo "ERROR: Ubuntu $OS_VER 미지원." >&2
                 exit 1
             fi
             ;;
         *)
-            log "ERROR: 미지원 OS: $OS_ID $OS_VER."
+            echo "ERROR: 미지원 OS: $OS_ID $OS_VER." >&2
             exit 1
             ;;
     esac
-    log "감지된 OS: $OS_ID $OS_VER (서브디렉토리: $OS_SUBDIR, 메이저 버전: $MAJOR_VER)"
 }
 
-# 메인 로직
-log "go.sh 시작"
-
-# OS 감지
 detect_os
 
-# secure 스크립트 경로 구성
 SOURCE_DIR="$SECURE_COLLECTION_DIR/$OS_SUBDIR"
 SECURE_SCRIPT="$SOURCE_DIR/main.sh"
-log "secure 스크립트 경로: $SECURE_SCRIPT"
 
 if [ ! -f "$SECURE_SCRIPT" ]; then
-    log "ERROR: $SECURE_SCRIPT 없음."
+    echo "ERROR: $SECURE_SCRIPT 없음." >&2
     exit 1
 fi
 
-# 하위 스크립트 권한 설정
-log "하위 스크립트 권한 설정: $SOURCE_DIR/*.sh"
-chmod +x "$SOURCE_DIR"/*.sh || { log "ERROR: $SOURCE_DIR/*.sh 권한 설정 실패"; exit 1; }
-log "하위 스크립트 권한 설정 완료"
-
-# secure 스크립트 실행
-log "$SECURE_SCRIPT 실행 시작"
-bash "$SECURE_SCRIPT" || {
-    log "ERROR: $SECURE_SCRIPT 실행 실패."
+chmod +x "$SOURCE_DIR"/*.sh || {
+    echo "ERROR: $SOURCE_DIR/*.sh 권한 설정 실패" >&2
     exit 1
 }
-log "$SECURE_SCRIPT 실행 완료"
 
-log "go.sh 완료"
+bash "$SECURE_SCRIPT" || {
+    echo "ERROR: $SECURE_SCRIPT 실행 실패." >&2
+    exit 1
+}
