@@ -5,26 +5,20 @@ source /usr/local/src/secure_os_collection/c7/common.sh
 SSH_PORT="${NEW_SSH_PORT:-$(grep -iE '^[# ]*Port[[:space:]]+[0-9]+' /etc/ssh/sshd_config | awk '{print $2}' | tail -n1)}"
 SSH_PORT="${SSH_PORT:-22}"
 
-log_info "firewalld 방화벽 설정 시작"
-
 # iptables 비활성화
 systemctl stop iptables 2>/dev/null || true
 systemctl disable iptables 2>/dev/null || true
 systemctl mask iptables 2>/dev/null || true
-log_info "iptables 비활성화 및 마스킹 완료"
 
 # firewalld 패키지 설치 확인
 if ! rpm -q firewalld >/dev/null 2>&1; then
-    yum install -y firewalld || { log_error "firewalld" "firewalld 패키지 설치 실패"; exit 1; }
-    log_info "firewalld 설치 완료"
+    yum install -y firewalld || { echo "ERROR: firewalld 패키지 설치 실패" >&2; exit 1; }
 fi
 
 systemctl unmask firewalld >/dev/null 2>&1 || true
-systemctl enable --now firewalld >/dev/null 2>&1 || { log_error "firewalld" "firewalld 시작 실패"; exit 1; }
+systemctl enable --now firewalld >/dev/null 2>&1 || { echo "ERROR: firewalld 시작 실패" >&2; exit 1; }
 
 # iptables와 동일한 firewalld 정책 설정
-log_info "firewalld 정책 적용 중..."
-
 # KSIDC 관리 IP 전체 TCP 포트 허용 (리치 룰)
 firewall-cmd --permanent --zone=public --add-rich-rule="rule family='ipv4' source address='116.122.36.109' protocol value='tcp' accept"
 firewall-cmd --permanent --zone=public --add-rich-rule="rule family='ipv4' source address='218.50.1.130' protocol value='tcp' accept"
@@ -61,9 +55,7 @@ firewall-cmd --permanent --zone=public --add-protocol=icmp
 firewall-cmd --permanent --zone=public --set-target=DROP
 
 # 영구 규칙 적용을 위한 reload
-if firewall-cmd --reload; then
-    log_info "firewalld 규칙이 성공적으로 적용되었습니다."
-else
-    log_error "firewalld" "firewalld 규칙 reload 실패"
+if ! firewall-cmd --reload; then
+    echo "ERROR: firewalld 규칙 reload 실패" >&2
     exit 1
 fi

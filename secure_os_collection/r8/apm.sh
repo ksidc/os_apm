@@ -10,8 +10,6 @@ read install
 
 case $install in
 yes|y|Y|YES)
-    log_info "=== APM 설치 및 연동 시작 ==="
-
     ########################################
     # Apache 설치 및 설정
     ########################################
@@ -113,6 +111,7 @@ EOF
     dnf -y install vsftpd
     sed -i 's/anonymous_enable=YES/anonymous_enable=NO/g' /etc/vsftpd/vsftpd.conf
     sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd/vsftpd.conf
+    sed -i '/^allow_writeable_chroot=/d; /^pasv_enable=/d; /^pasv_min_port=/d; /^pasv_max_port=/d' /etc/vsftpd/vsftpd.conf
     cat <<EOF >> /etc/vsftpd/vsftpd.conf
 allow_writeable_chroot=YES
 pasv_enable=YES
@@ -147,8 +146,6 @@ rsync -avogh /var/lib/mysq* "/data/backup/${DATE}"
 rsync -avogh /home/* "/data/backup/${DATE}"
 EOF
     chmod 755 /etc/cron.daily/backup.sh
-
-    log_info "=== APM 설치 및 연동 완료 ==="
     ;;
 no|n|N|NO)
     echo "APM 설치를 건너뜁니다."

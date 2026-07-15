@@ -2,39 +2,32 @@
 
 source /usr/local/src/secure_os_collection/c7/common.sh
 
+# 기본 불필요 계정을 삭제하고 삭제 내역을 요약 변수에 기록한다.
 remove_unneeded_users() {
-    log_info "remove_unneeded_users start"
     local user_name
 
     for user_name in lp games ftp sync shutdown halt; do
         if id "$user_name" >/dev/null 2>&1; then
-            userdel -r "$user_name" && {
-                log_info "$user_name removed"
+            if userdel -r "$user_name"; then
                 DELETED_USERS+="$user_name "
-            } || log_error "remove_unneeded_users" "$user_name remove failed"
-        else
-            log_info "$user_name not present"
+            fi
         fi
     done
 }
 
+# ftp 계정이 남아 있을 경우 로그인 불가 셸을 /bin/false로 맞춘다.
 configure_ftp_shell() {
-    log_info "configure_ftp_shell start"
-
     if getent passwd ftp | grep -q '/sbin/nologin'; then
         sed -i '/^ftp:/s#/sbin/nologin#/bin/false#' /etc/passwd || {
-            log_error "configure_ftp_shell" "/etc/passwd update failed"
+            echo "ERROR: /etc/passwd update failed" >&2
             return 1
         }
-        log_info "ftp shell changed to /bin/false"
         DELETED_USERS+="ftp(shell_changed) "
-    else
-        log_info "ftp shell change not required"
     fi
 }
 
+# root 비밀번호를 입력받아 변경하고 계정 상태 조회로 적용 여부를 확인한다.
 step1_change_root_password() {
-    log_info "step1_change_root_password start"
     local root_password confirm_password
 
     while true; do
@@ -55,17 +48,18 @@ step1_change_root_password() {
     done
 
     echo "root:$root_password" | chpasswd || {
-        log_error "change_root_password" "root password update failed"
+        echo "ERROR: root password update failed" >&2
         exit 1
     }
 
-    passwd -S root >> "$LOG_FILE" || log_error "change_root_password" "root status check failed"
-    log_info "root password updated"
+    passwd -S root >/dev/null 2>&1 || {
+        echo "ERROR: root status check failed" >&2
+        exit 1
+    }
 }
 
+# 선택 시 기존 일반 사용자와 login.defs에 패스워드 만료 정책을 적용한다.
 set_password_policy() {
-    log_info "set_password_policy start"
-
     local ans max_days min_len min_days warn_days
     local user_list_output
     local -a user_list=()
@@ -73,7 +67,6 @@ set_password_policy() {
 
     read -r -p "패스워드 만료 정책을 설정하시겠습니까? (Y/N): " ans < /dev/tty
     if [[ ! "$ans" =~ ^[Yy]$ ]]; then
-        log_info "password expiry policy skipped"
         PASSWORD_POLICY_SUMMARY="not applied"
         return 0
     fi
@@ -90,24 +83,21 @@ set_password_policy() {
     warn_days=${warn_days:-7}
 
     PASSWORD_POLICY_SUMMARY="applied(max=$max_days min_len=$min_len min_days=$min_days warn=$warn_days)"
-    log_info "password policy selected: $PASSWORD_POLICY_SUMMARY"
 
     user_list_output=$(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd 2>/dev/null) || {
-        log_error "set_password_policy" "regular user list read failed"
+        echo "ERROR: regular user list read failed" >&2
         exit 1
     }
 
     if [ -n "$user_list_output" ]; then
         readarray -t user_list <<< "$user_list_output"
-    else
-        log_info "no regular users found for chage update"
     fi
 
     for user_name in "${user_list[@]}"; do
-        chage -M "$max_days" -m "$min_days" -W "$warn_days" "$user_name" || \
-            log_error "set_password_policy" "chage update failed for $user_name"
-        log_info "chage updated for $user_name"
-        chage -l "$user_name" | grep -E 'Maximum|Minimum|Warning' >> "$LOG_FILE"
+        chage -M "$max_days" -m "$min_days" -W "$warn_days" "$user_name" || {
+            echo "ERROR: chage update failed for $user_name" >&2
+            exit 1
+        }
     done
 
     sed -i '/^PASS_MAX_DAYS/d' /etc/login.defs
@@ -119,134 +109,95 @@ set_password_policy() {
         echo "PASS_MIN_LEN    $min_len"
         echo "PASS_MIN_DAYS   $min_days"
         echo "PASS_WARN_AGE   $warn_days"
-    } >> /etc/login.defs || log_error "set_password_policy" "/etc/login.defs update failed"
-
-    log_info "/etc/login.defs updated"
+    } >> /etc/login.defs || {
+        echo "ERROR: /etc/login.defs update failed" >&2
+        exit 1
+    }
 }
 
+# 일반 운영 계정을 준비하고 root SSH 로그인을 차단한다.
 create_fallback_and_restrict() {
-    log_info "create_fallback_and_restrict start"
-
     local existing_users user_name user_password password_confirm
+    local create_user=1
 
     existing_users=$(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd 2>/dev/null) || {
-        log_error "create_fallback_and_restrict" "regular user lookup failed"
+        echo "ERROR: regular user lookup failed" >&2
         CREATED_USER="not created(lookup failed)"
         return 1
     }
 
-    log_info "existing regular users: ${existing_users:-none}"
     if [ -n "$existing_users" ]; then
-        read -r -p "기존 일반 계정이 있습니다. 새 계정 생성 없이 진행하시겠습니까? (Y/N): " yn < /dev/tty
-        if [[ "$yn" =~ ^[Yy]$ ]]; then
-            log_info "fallback user creation skipped"
+        echo "기존 일반 계정:"
+        echo "$existing_users"
+        if prompt_yes_no "새 계정 생성 없이 진행하시겠습니까?"; then
+            ensure_admin_access wheel $existing_users || return 1
             CREATED_USER="not created(existing: $existing_users)"
-        else
+            create_user=0
+        fi
+    fi
+
+    if [ "$create_user" -eq 1 ]; then
+        while true; do
             read -r -p "생성할 일반 계정명 입력: " user_name < /dev/tty
             if [ -z "$user_name" ]; then
-                log_error "create_user" "username is required"
-                CREATED_USER="not created(username missing)"
-                return 1
+                echo "계정명을 입력해야 합니다."
+                continue
             fi
 
             if id "$user_name" >/dev/null 2>&1; then
-                log_info "user already exists: $user_name"
+                ensure_admin_access wheel "$user_name" || return 1
                 CREATED_USER="$user_name(existing)"
-            else
-                while true; do
-                    read -r -s -p "계정 '$user_name' 비밀번호 입력 (최소 ${MIN_PASSWORD_LENGTH}자): " user_password < /dev/tty
-                    echo
-                    if [ "${#user_password}" -lt "$MIN_PASSWORD_LENGTH" ]; then
-                        echo "  최소 ${MIN_PASSWORD_LENGTH}자 이상 입력해야 합니다."
-                        continue
-                    fi
-
-                    read -r -s -p "비밀번호 확인: " password_confirm < /dev/tty
-                    echo
-                    if [ "$user_password" != "$password_confirm" ]; then
-                        echo "  비밀번호가 일치하지 않습니다. 다시 입력하세요."
-                        continue
-                    fi
-                    break
-                done
-
-                useradd -m -G wheel "$user_name" || {
-                    log_error "create_user" "useradd failed: $user_name"
-                    CREATED_USER="not created(useradd failed)"
-                    return 1
-                }
-                echo "$user_name:$user_password" | chpasswd || {
-                    log_error "create_user" "password set failed: $user_name"
-                    CREATED_USER="not created(password set failed)"
-                    return 1
-                }
-                log_info "user created: $user_name"
-                CREATED_USER="$user_name(created)"
+                break
             fi
-        fi
-    else
-        read -r -p "생성할 일반 계정명 입력: " user_name < /dev/tty
-        if [ -z "$user_name" ]; then
-            log_error "create_user" "username is required"
-            CREATED_USER="not created(username missing)"
-            return 1
-        fi
 
-        while true; do
-            read -r -s -p "계정 '$user_name' 비밀번호 입력 (최소 ${MIN_PASSWORD_LENGTH}자): " user_password < /dev/tty
-            echo
-            if [ "${#user_password}" -lt "$MIN_PASSWORD_LENGTH" ]; then
-                echo "  최소 ${MIN_PASSWORD_LENGTH}자 이상 입력해야 합니다."
+            if ! confirm_account_name "$user_name"; then
+                echo "계정명을 다시 입력해 주세요."
                 continue
             fi
 
-            read -r -s -p "비밀번호 확인: " password_confirm < /dev/tty
-            echo
-            if [ "$user_password" != "$password_confirm" ]; then
-                echo "  비밀번호가 일치하지 않습니다. 다시 입력하세요."
-                continue
-            fi
+            while true; do
+                read -r -s -p "계정 '$user_name' 비밀번호 입력 (최소 ${MIN_PASSWORD_LENGTH}자): " user_password < /dev/tty
+                echo
+                if [ "${#user_password}" -lt "$MIN_PASSWORD_LENGTH" ]; then
+                    echo "  최소 ${MIN_PASSWORD_LENGTH}자 이상 입력해야 합니다."
+                    continue
+                fi
+
+                read -r -s -p "비밀번호 확인: " password_confirm < /dev/tty
+                echo
+                if [ "$user_password" != "$password_confirm" ]; then
+                    echo "  비밀번호가 일치하지 않습니다. 다시 입력하세요."
+                    continue
+                fi
+                break
+            done
+
+            useradd -m -G wheel "$user_name" || {
+                echo "ERROR: useradd failed: $user_name" >&2
+                CREATED_USER="not created(useradd failed)"
+                return 1
+            }
+            echo "$user_name:$user_password" | chpasswd || {
+                echo "ERROR: password set failed: $user_name" >&2
+                CREATED_USER="not created(password set failed)"
+                return 1
+            }
+            CREATED_USER="$user_name(created)"
             break
         done
-
-        useradd -m -G wheel "$user_name" || {
-            log_error "create_user" "useradd failed: $user_name"
-            CREATED_USER="not created(useradd failed)"
-            return 1
-        }
-        echo "$user_name:$user_password" | chpasswd || {
-            log_error "create_user" "password set failed: $user_name"
-            CREATED_USER="not created(password set failed)"
-            return 1
-        }
-        log_info "user created: $user_name"
-        CREATED_USER="$user_name(created)"
     fi
 
-    sed -i -e 's/^#PermitRootLogin.*/PermitRootLogin no/' \
-           -e 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config || {
-        log_error "restrict_root" "sshd_config update failed"
+    sed -i '/^[[:space:]]*#\?[[:space:]]*PermitRootLogin[[:space:]]/d' /etc/ssh/sshd_config || {
+        echo "ERROR: sshd_config update failed" >&2
         return 1
     }
+    echo 'PermitRootLogin no' >> /etc/ssh/sshd_config
 
-    log_info "root ssh login disabled"
     restarts_needed["sshd"]=1
-
-    if [ -n "${user_name:-}" ] && id "$user_name" >/dev/null 2>&1; then
-        {
-            echo ">>> user status: $user_name"
-            passwd -S "$user_name"
-            echo ">>> user groups: $user_name"
-            groups "$user_name"
-            echo ">>> home permissions: $user_name"
-            ls -ld "/home/$user_name"
-        } >> "$LOG_FILE"
-    fi
 }
 
+# pwquality 설정에 복잡도 기준을 추가해 신규 비밀번호 품질을 제한한다.
 configure_pwquality() {
-    log_info "configure_pwquality start"
-
     sed -i '/^lcredit\|^ucredit\|^dcredit\|^ocredit\|^minlen\|^difok/d' /etc/security/pwquality.conf
     cat <<EOF >> /etc/security/pwquality.conf
 lcredit=-1
@@ -256,12 +207,10 @@ ocredit=-1
 minlen=8
 difok=2
 EOF
-
-    log_info "pwquality configured"
 }
 
+# pam_tally2 기반 로그인 실패 잠금 정책을 system-auth/password-auth에 적용한다.
 configure_pam_lockout() {
-    log_info "configure_pam_lockout start"
     local pam_file
 
     for pam_file in /etc/pam.d/system-auth /etc/pam.d/password-auth; do
@@ -269,42 +218,31 @@ configure_pam_lockout() {
         sed -i '/^auth\s\+required\s\+pam_env.so/a auth        required      pam_tally2.so deny=3 unlock_time=300' "$pam_file"
         sed -i '/^auth\s\+sufficient\s\+pam_unix.so/a auth        [default=die] pam_tally2.so deny=3 unlock_time=300' "$pam_file"
         sed -i '/^account\s\+required\s\+pam_unix.so/a account     required      pam_tally2.so' "$pam_file"
-        log_info "pam_tally2 configured: $pam_file"
     done
 }
 
+# su 사용을 wheel 그룹으로 제한하고 /usr/bin/su 권한을 재확인한다.
 configure_su_restriction() {
-    log_info "configure_su_restriction start"
     local su_file="/etc/pam.d/su"
 
     if ! getent group wheel >/dev/null 2>&1; then
         groupadd wheel || {
-            log_error "configure_su_restriction" "wheel group create failed"
+            echo "ERROR: wheel group create failed" >&2
             return 1
         }
-        log_info "wheel group created"
     fi
 
     set_file_perms /usr/bin/su root:wheel 4750
 
-    if grep -q '^#auth\s\+required\s\+pam_wheel.so\s\+use_uid' "$su_file"; then
-        sed -i 's/^#\(auth\s\+required\s\+pam_wheel.so\s\+use_uid\)/\1/' "$su_file" &&
-            log_info "pam_wheel uncommented"
-    elif ! grep -q 'pam_wheel.so.*use_uid' "$su_file"; then
-        sed -i '/pam_rootok.so/a auth       required    pam_wheel.so use_uid' "$su_file" &&
-            log_info "pam_wheel added"
-    else
-        log_info "pam_wheel already configured"
-    fi
+    sed -i '/^[[:space:]]*auth[[:space:]]\+required[[:space:]]\+pam_wheel\.so.*use_uid/d' "$su_file"
+    sed -i '/pam_rootok.so/a auth       required    pam_wheel.so use_uid' "$su_file"
 }
 
-log_info "accounts hardening start"
-remove_unneeded_users
-configure_ftp_shell
-step1_change_root_password
-set_password_policy
-create_fallback_and_restrict
-configure_pwquality
-configure_pam_lockout
-configure_su_restriction
-log_info "accounts hardening complete"
+remove_unneeded_users || exit 1
+configure_ftp_shell || exit 1
+step1_change_root_password || exit 1
+set_password_policy || exit 1
+create_fallback_and_restrict || exit 1
+configure_pwquality || exit 1
+configure_pam_lockout || exit 1
+configure_su_restriction || exit 1

@@ -9,42 +9,34 @@ SSH_PORT="${SSH_PORT:-22}"
 # iptables 규칙 파일 경로
 RULES_FILE="/etc/sysconfig/iptables"
 
+# TCP wrappers를 설치하고 기본 접근 제어 파일을 root 권한으로 설정한다.
 configure_tcp_wrappers() {
-    log_info "configure_tcp_wrappers 시작"
-    yum install -y tcp_wrappers || { log_error "configure_tcp_wrappers" "tcp_wrappers 설치 실패"; exit 1; }
+    yum install -y tcp_wrappers || { echo "ERROR: tcp_wrappers 설치 실패" >&2; exit 1; }
     echo "sshd: ALL" > /etc/hosts.allow
     echo "ALL: ALL" > /etc/hosts.deny
     set_file_perms /etc/hosts.allow root:root 644
     set_file_perms /etc/hosts.deny root:root 644
-    log_info "TCP wrappers 설정 완료"
 }
 
+# rhosts 기반 신뢰 관계 파일을 제거한다.
 disable_rhosts_hosts_equiv() {
-    log_info "disable_rhosts_hosts_equiv 시작"
     rm -f /etc/hosts.equiv "$HOME/.rhosts" 2>/dev/null || true
-    log_info "rhosts/hosts.equiv 제거 완료"
 }
 
 # TCP wrapper 보안 설정 항상 적용
 configure_tcp_wrappers
 disable_rhosts_hosts_equiv
 
-log_info "iptables 방화벽 설정 시작"
-
 # firewalld 완전 비활성화 (공통 처리)
 if command -v firewall-cmd >/dev/null 2>&1; then
     systemctl stop firewalld 2>/dev/null || true
     systemctl disable firewalld 2>/dev/null || true
     systemctl mask firewalld 2>/dev/null || true
-    log_info "firewalld 비활성화 및 마스킹 완료"
 fi
 
 # 필수 패키지 설치 확인
 if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
-    yum install -y iptables iptables-services || { log_error "iptables" "iptables 패키지 설치 실패"; exit 1; }
-    log_info "iptables/iptables-services 설치 완료"
-else
-    log_info "iptables/iptables-services 이미 설치됨"
+    yum install -y iptables iptables-services || { echo "ERROR: iptables 패키지 설치 실패" >&2; exit 1; }
 fi
 
 systemctl unmask iptables >/dev/null 2>&1 || true
@@ -106,14 +98,10 @@ COMMIT
 EOF
 
 chmod 600 "$RULES_FILE"
-log_info "iptables 규칙 파일 생성 완료: $RULES_FILE"
 
 # 규칙 적용을 위해 서비스 상태 활성화 및 재시작
-systemctl enable iptables >/dev/null 2>&1 || { log_error "iptables" "iptables 서비스 활성화 실패"; exit 1; }
-if systemctl restart iptables; then
-    log_info "iptables 서비스 재시작 성공"
-else
+systemctl enable iptables >/dev/null 2>&1 || { echo "ERROR: iptables 서비스 활성화 실패" >&2; exit 1; }
+if ! systemctl restart iptables; then
     echo "iptables 규칙 적용에 실패했습니다 - $RULES_FILE 파일을 확인하세요" >&2
-    log_error "iptables" "iptables 서비스 재시작 실패"
     exit 1
 fi

@@ -1,33 +1,33 @@
 #!/bin/bash
 # iptables.sh : Rocky 10 방화벽 설정 (사용자 선택 기반)
-# 사용: source 형태로 호출하거나 단독 실행 가능
+
 set -euo pipefail
 source /usr/local/src/secure_os_collection/r10/common.sh
 
 SSH_PORT="${NEW_SSH_PORT:-$(grep -iE '^[# ]*Port[[:space:]]+[0-9]+' /etc/ssh/sshd_config | awk '{print $2}' | tail -n1)}"
 SSH_PORT="${SSH_PORT:-22}"
 
-RULES="/etc/sysconfig/iptables"
+rules="/etc/sysconfig/iptables"
 
+# firewalld를 비활성화해 iptables 단독 정책이 적용되도록 한다.
 if command -v firewall-cmd >/dev/null 2>&1; then
     systemctl stop firewalld || true
     systemctl disable firewalld || true
     systemctl mask firewalld || true
-    log_info "firewalld 비활성화 및 마스크 처리"
 fi
 
-log_info "iptables 설정 시작"
-
+# iptables-services를 설치하고 기준 방화벽 정책 파일을 생성한다.
 if ! rpm -q iptables >/dev/null 2>&1 || ! rpm -q iptables-services >/dev/null 2>&1; then
-    dnf install -y iptables iptables-services || { log_error "iptables" "iptables 패키지 설치 실패"; exit 1; }
-    log_info "iptables/iptables-services 설치 완료"
-else
-    log_info "iptables/iptables-services 이미 설치됨"
+    dnf install -y iptables iptables-services || {
+        echo "ERROR: iptables 설치 실패" >&2
+        exit 1
+    }
 fi
 
 systemctl unmask iptables >/dev/null 2>&1 || true
 
-cat > "$RULES" <<EOF
+# U-28: INPUT/FORWARD 기본 정책 DROP
+cat > "$rules" <<EOF
 *filter
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
@@ -43,7 +43,7 @@ cat > "$RULES" <<EOF
 -A RH-Firewall-1-INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 ######################################################################################################
-# KSIDC SSH 허용 (관리자 IP)
+# KSIDC SSH Allow (관리자 IP)
 -A RH-Firewall-1-INPUT -p tcp -s 116.122.36.109 -j ACCEPT
 -A RH-Firewall-1-INPUT -p tcp -s 218.50.1.130 -j ACCEPT
 -A RH-Firewall-1-INPUT -p tcp -s 110.9.167.210 -j ACCEPT
@@ -73,7 +73,7 @@ cat > "$RULES" <<EOF
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 110 -j ACCEPT
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 143 -j ACCEPT
 
-# MySQL 서비스 포트 (필요 시 차단 가능)
+# MySQL 서비스 포트
 -A RH-Firewall-1-INPUT -m state --state NEW -p tcp --dport 3306 -j ACCEPT
 
 # 기본 차단(DROP) 정책
@@ -82,12 +82,10 @@ cat > "$RULES" <<EOF
 COMMIT
 EOF
 
-chmod 600 "$RULES"
-log_info "iptables 규칙 파일 생성: $RULES"
+chmod 600 "$rules"
 
 systemctl enable iptables
-if ! systemctl restart iptables; then
-    echo "iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요"
+systemctl restart iptables || {
+    echo "ERROR: iptables 규칙 적용 실패 - /etc/sysconfig/iptables 확인 필요" >&2
     exit 1
-fi
-log_info "iptables 서비스 적용 완료"
+}
