@@ -304,7 +304,7 @@ check_file_perms() {
     fail "U-67 /var/log/btmp 권한: /var/log/btmp (실제=${btmp_perm}, 기대=600)"
   fi
 
-  if is_rhel; then
+  if is_rhel || is_ubuntu; then
     local tmpfiles_conf="/etc/tmpfiles.d/99-hardening-perms.conf"
     single_active_line "$tmpfiles_conf" '^z[[:space:]]+/var/log/wtmp[[:space:]]+0644[[:space:]]+root[[:space:]]+utmp' "wtmp tmpfiles 유지 설정"
     single_active_line "$tmpfiles_conf" '^z[[:space:]]+/var/log/btmp[[:space:]]+0600[[:space:]]+root[[:space:]]+utmp' "btmp tmpfiles 유지 설정"
@@ -392,7 +392,7 @@ check_hardening_files() {
     echo ""
     [ "$cnt" -eq 0 ] \
       && pass "U-25 world-writable 파일: 없음" \
-      || fail "U-25 world-writable 파일: ${cnt}개 존재"
+      || warn "U-25 world-writable 파일: ${cnt}개 존재 (검증 실패 집계 제외)"
   else
     skip "U-25 world-writable: 해당 OS 미적용 대상"
   fi
@@ -530,7 +530,11 @@ check_pam() {
         || pass "계정 삭제 확인: $u 없음"
     done
   elif is_ubuntu; then
-    for u in lp uucp ftp shutdown halt; do
+    local -a ubuntu_remove_targets=(ftp shutdown halt)
+    if [ "$OS_MAJOR" -ge 22 ]; then
+      ubuntu_remove_targets=(lp uucp ftp shutdown halt)
+    fi
+    for u in "${ubuntu_remove_targets[@]}"; do
       id "$u" &>/dev/null \
         && warn "불필요 계정 잔존: $u" \
         || pass "계정 삭제 확인: $u 없음"

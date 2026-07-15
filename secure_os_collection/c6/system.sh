@@ -175,25 +175,19 @@ EOF
 
 # SSH 포트를 확인 입력받아 단일 설정으로 만들고 문법 검증 후 재시작 대상으로 기록한다.
 configure_ssh_port() {
-    local current_port new_port attempt
+    local current_port new_port
     current_port="$(sshd -T 2>/dev/null | awk '/^port / {print $2; exit}')"
     current_port="${current_port:-22}"
     echo "현재 SSH 포트: $current_port, 권장 기본값: 38371"
 
-    attempt=1
-    while [ "$attempt" -le 3 ]; do
-        read -r -p "변경할 포트 (Enter: 38371, $attempt/3): " new_port < /dev/tty
+    while true; do
+        read -r -p "변경할 포트 (Enter: 38371): " new_port < /dev/tty
         new_port="${new_port:-38371}"
         if echo "$new_port" | grep -Eq '^[0-9]+$' && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
             break
         fi
         echo "유효한 포트 번호(1~65535)를 입력하세요."
-        attempt=$((attempt + 1))
     done
-    [ "$attempt" -le 3 ] || {
-        echo "ERROR: SSH 포트 입력 실패" >&2
-        return 1
-    }
 
     if [ "$new_port" = "22" ] && ! prompt_yes_no "기본 SSH 포트 22를 그대로 사용하시겠습니까?"; then
         configure_ssh_port

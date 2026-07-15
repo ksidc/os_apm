@@ -150,17 +150,15 @@ step2_change_ssh_port() {
     old_port=$(grep -i '^Port' /etc/ssh/sshd_config | awk '{print $2}' | head -1)
     [[ -z "$old_port" ]] && old_port=22
 
-    local max_retries=3
     local new_port
     echo "현재 SSH 포트: $old_port, 권장 기본값: 38371 (설치 초기 기본은 22)"
-    for ((i=1; i<=max_retries; i++)); do
-        read -r -p "변경할 포트를 입력하세요 (Enter로 권장 38371 사용, $i/$max_retries): " new_port < /dev/tty
+    while true; do
+        read -r -p "변경할 포트를 입력하세요 (Enter로 권장 38371 사용): " new_port < /dev/tty
         new_port=${new_port:-38371}
         if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
             break
         fi
         echo "오류: 유효한 포트 번호(1-65535)를 입력하세요."
-        [ "$i" -eq "$max_retries" ] && { echo "ERROR: 유효한 포트 번호 입력 실패" >&2; exit 1; }
     done
 
     if [[ "$new_port" == "$old_port" ]]; then

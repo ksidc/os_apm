@@ -49,14 +49,15 @@ while true; do
     esac
 done
 
+# 방화벽 스크립트의 set -euo pipefail이 main.sh에 남지 않도록 별도 bash로 실행한다.
 # 선택한 방화벽 방식만 적용하고, 미사용 선택 시 양쪽 방화벽 서비스를 모두 비활성화한다.
 if [ "$FIREWALL_CHOICE" -eq 1 ]; then
-    source /usr/local/src/secure_os_collection/r10/iptables.sh || {
+    NEW_SSH_PORT="$NEW_SSH_PORT" bash /usr/local/src/secure_os_collection/r10/iptables.sh || {
         echo "ERROR: iptables.sh 실행 실패" >&2
         exit 1
     }
 elif [ "$FIREWALL_CHOICE" -eq 2 ]; then
-    source /usr/local/src/secure_os_collection/r10/firewalld.sh || {
+    NEW_SSH_PORT="$NEW_SSH_PORT" bash /usr/local/src/secure_os_collection/r10/firewalld.sh || {
         echo "ERROR: firewalld.sh 실행 실패" >&2
         exit 1
     }
@@ -97,6 +98,10 @@ if prompt_yes_no "dnf update를 진행하시겠습니까?"; then
 else
     SUMMARY+="패키지 업데이트: 건너뜀 (사용자 선택)\n"
 fi
+
+# APM 설치와 dnf update가 복구할 수 있는 기본 시스템 계정을 패키지 작업 후 다시 삭제한다.
+remove_unneeded_users
+configure_ftp_shell
 
 # 업데이트 후 패키지 기본값으로 되돌아갈 수 있는 wtmp/btmp 권한을 다시 고정한다.
 for f in /var/log/wtmp /var/log/lastlog; do

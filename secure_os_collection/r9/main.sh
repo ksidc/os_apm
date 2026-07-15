@@ -49,14 +49,15 @@ while true; do
     esac
 done
 
+# 방화벽 스크립트의 set -euo pipefail이 main.sh에 남지 않도록 별도 bash로 실행한다.
 # 선택한 방화벽 방식만 적용하고, 미사용 선택 시 양쪽 방화벽 서비스를 모두 비활성화한다.
 if [ "$FIREWALL_CHOICE" -eq 1 ]; then
-    source /usr/local/src/secure_os_collection/r9/iptables.sh || {
+    NEW_SSH_PORT="$NEW_SSH_PORT" bash /usr/local/src/secure_os_collection/r9/iptables.sh || {
         echo "ERROR: iptables.sh 실행 실패" >&2
         exit 1
     }
 elif [ "$FIREWALL_CHOICE" -eq 2 ]; then
-    source /usr/local/src/secure_os_collection/r9/firewalld.sh || {
+    NEW_SSH_PORT="$NEW_SSH_PORT" bash /usr/local/src/secure_os_collection/r9/firewalld.sh || {
         echo "ERROR: firewalld.sh 실행 실패" >&2
         exit 1
     }
