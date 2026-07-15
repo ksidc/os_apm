@@ -18,27 +18,19 @@ DELETED_USERS=""
 NEW_SSH_PORT="미변경 (기본 22)"
 
 remove_unneeded_users() {
-  log_info "remove_unneeded_users 시작"
-  local user output
+  local user
   # lp, games, sync는 시스템 기본 계정이므로 삭제 대상에서 제외
   for user in ftp shutdown halt; do
     if id "$user" >/dev/null 2>&1; then
-      output="$(userdel -r "$user" 2>&1)" || true
+      userdel -r "$user" >/dev/null 2>&1 || true
       if ! id "$user" >/dev/null 2>&1; then
         DELETED_USERS+=" ${user}"
-        log_info "불필요 계정 삭제: $user"
-        [[ -n "$output" ]] && log_info "userdel 출력: $output"
-      else
-        log_warn "계정 삭제 실패: $output"
       fi
-    else
-      log_info "계정 없음: $user"
     fi
   done
 }
 
 change_root_password() {
-  log_info "change_root_password 시작"
   local password confirm
   while true; do
     read_password_from_tty "root 새 비밀번호를 입력하세요(최소 ${MIN_PASSWORD_LENGTH}자): " password
@@ -54,32 +46,30 @@ change_root_password() {
     break
   done
 
-  if echo "root:${password}" | chpasswd; then
-    log_info "root 비밀번호를 변경했습니다."
-  else
-    log_error "change_root_password" "root 비밀번호 변경 실패"
+  if ! echo "root:${password}" | chpasswd; then
+    echo "ERROR: root 비밀번호 변경 실패" >&2
     exit 1
   fi
 }
 
 change_ssh_port() {
-  log_info "change_ssh_port 시작"
   local current_port new_port ssh_config="/etc/ssh/sshd_config"
   current_port="$(sshd -T 2>/dev/null | awk '/^port /{print $2; exit}')"
   current_port="${current_port:-22}"
 
-  read_from_tty "변경할 SSH 포트를 입력하세요(기본 ${SSH_PORT}, 현재 ${current_port}): " new_port
-  new_port="${new_port:-$SSH_PORT}"
+  while true; do
+    read_from_tty "변경할 SSH 포트를 입력하세요(기본 ${SSH_PORT}, 현재 ${current_port}): " new_port
+    new_port="${new_port:-$SSH_PORT}"
 
-  if ! [[ "$new_port" =~ ^[0-9]+$ ]] || (( new_port < 1 || new_port > 65535 )); then
-    log_error "change_ssh_port" "잘못된 포트 번호 입력"
+    if [[ "$new_port" =~ ^[0-9]+$ ]] && (( new_port >= 1 && new_port <= 65535 )); then
+      break
+    fi
+
     echo "1~65535 범위의 숫자를 입력하세요."
-    exit 1
-  fi
+  done
 
   if [[ "$new_port" == "$current_port" ]]; then
     NEW_SSH_PORT="변경 없음 (${current_port})"
-    log_info "SSH 포트 변경이 불필요합니다."
     return 0
   fi
 
@@ -90,24 +80,21 @@ change_ssh_port() {
   fi
 
   if command_exists ufw; then
-    ufw allow "${new_port}/tcp" >/dev/null 2>&1 || log_warn "ufw에서 ${new_port}/tcp 허용 실패"
+    ufw allow "${new_port}/tcp" >/dev/null 2>&1 || true
   fi
 
   if sshd -t; then
     NEW_SSH_PORT="${current_port} → ${new_port}"
     mark_restart_needed "ssh"
-    log_info "SSH 포트를 ${new_port}로 설정했습니다."
   else
-    log_error "change_ssh_port" "sshd 설정 검증 실패"
+    echo "ERROR: sshd 설정 검증 실패" >&2
     exit 1
   fi
 }
 
 configure_password_policy() {
-  log_info "configure_password_policy 시작"
   if ! prompt_yes_no "비밀번호 만료 정책을 적용할까요?"; then
     PASSWORD_POLICY_SUMMARY="미적용"
-    log_info "비밀번호 만료 정책 적용이 건너뛰어졌습니다."
     return 0
   fi
 
@@ -124,7 +111,7 @@ configure_password_policy() {
 
   local user
   for user in $(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd); do
-    chage -M "$max_days" -m "$min_days" -W "$warn_days" "$user" || log_warn "chage 실패: $user"
+    chage -M "$max_days" -m "$min_days" -W "$warn_days" "$user" || true
   done
 
   sed -i '/^PASS_MAX_DAYS/d' /etc/login.defs
@@ -139,13 +126,12 @@ PASS_MIN_LEN    $min_len
 EOF
 
   PASSWORD_POLICY_SUMMARY="적용됨 (최대 ${max_days}일, 최소 길이 ${min_len}, 최소 ${min_days}일, 경고 ${warn_days}일)"
-  log_info "비밀번호 만료 정책을 적용했습니다."
 }
 
 setup_fallback_account_and_restrict_root() {
-  log_info "setup_fallback_account_and_restrict_root 시작"
 
   local fallback_user existing_users create_fallback=false
+  local -a existing_user_array=()
   existing_users="$(awk -F: '$3>=1000 && $3<60000 {print $1}' /etc/passwd | xargs)"
 
   if [[ -n "$existing_users" ]]; then
@@ -153,12 +139,12 @@ setup_fallback_account_and_restrict_root() {
     if prompt_yes_no "추가로 관리자 계정을 생성할까요?"; then
       create_fallback=true
     else
-      log_info "관리자 계정 생성이 건너뛰어졌습니다."
+      read -r -a existing_user_array <<< "$existing_users"
+      ensure_admin_access sudo "${existing_user_array[@]}" || exit 1
     fi
   else
     create_fallback=true
     echo "일반 사용자 계정이 없어 관리자 계정을 생성합니다."
-    log_warn "기존 일반 사용자 계정이 없어 새 계정을 생성합니다."
   fi
 
   if [[ "$create_fallback" == true ]]; then
@@ -168,6 +154,12 @@ setup_fallback_account_and_restrict_root() {
       
       # Expanded cancellation keywords (case-insensitive)
       if [[ "${fallback_user,,}" =~ ^(!?cancel|!chain|quit|exit|q|!취소)$ ]]; then
+        if [[ -z "$existing_users" ]]; then
+          echo "관리자 권한이 있는 일반 계정이 없어 생성을 취소할 수 없습니다."
+          continue
+        fi
+        read -r -a existing_user_array <<< "$existing_users"
+        ensure_admin_access sudo "${existing_user_array[@]}" || exit 1
         echo "계정 생성을 취소합니다."
         create_fallback=false
         break
@@ -182,14 +174,19 @@ setup_fallback_account_and_restrict_root() {
       if id "$fallback_user" >/dev/null 2>&1; then
         echo "이미 존재하는 계정입니다."
         if prompt_yes_no "이 계정($fallback_user)을 관리자 용도로 사용하고, 새 생성을 취소하시겠습니까?"; then
+             ensure_admin_access sudo "$fallback_user" || exit 1
              create_fallback=false
              CREATED_USER="$fallback_user"
-             log_info "기존 계정($fallback_user)을 거부용도(fallback)로 사용합니다."
              break
         else
              echo "다른 이름을 입력하세요."
              continue
-        fi
+         fi
+       fi
+
+      if ! confirm_account_name "$fallback_user"; then
+        echo "계정명을 다시 입력해 주세요."
+        continue
       fi
       break
     done
@@ -210,10 +207,9 @@ setup_fallback_account_and_restrict_root() {
         break
       done
 
-      useradd -m -G adm,sudo -s /bin/bash "$fallback_user" || { log_error "setup_fallback_account" "계정 생성 실패"; exit 1; }
-      echo "${fallback_user}:${password}" | chpasswd || { log_error "setup_fallback_account" "비밀번호 설정 실패"; exit 1; }
+      useradd -m -G adm,sudo -s /bin/bash "$fallback_user" || { echo "ERROR: 계정 생성 실패" >&2; exit 1; }
+      echo "${fallback_user}:${password}" | chpasswd || { echo "ERROR: 비밀번호 설정 실패" >&2; exit 1; }
       CREATED_USER="$fallback_user"
-      log_info "관리자 계정 '${fallback_user}'을 생성했습니다."
     fi
   fi
 
@@ -241,7 +237,7 @@ setup_fallback_account_and_restrict_root() {
   for cfg in "${config_files[@]}"; do
     if grep -E '^[[:space:]]*PermitRootLogin[[:space:]]+yes' "$cfg" >/dev/null 2>&1; then
       bad_found=true
-      log_error "setup_fallback_account_and_restrict_root" "PermitRootLogin yes 발견: $cfg"
+      echo "ERROR: PermitRootLogin yes 발견: $cfg" >&2
     fi
   done
 
@@ -252,15 +248,13 @@ setup_fallback_account_and_restrict_root() {
 
   if sshd -t; then
     mark_restart_needed "ssh"
-    log_info "SSH에서 root 원격 로그인을 차단했습니다."
   else
-    log_error "setup_fallback_account_and_restrict_root" "sshd 설정 검증 실패"
+    echo "ERROR: sshd 설정 검증 실패" >&2
     exit 1
   fi
 }
 
 configure_pass_min_length() {
-  log_info "configure_pass_min_length 시작"
   local pam_file="/etc/pam.d/common-password"
   if grep -q 'pam_unix.so' "$pam_file"; then
     if grep -Eq 'pam_unix\.so.*minlen=' "$pam_file"; then
@@ -268,18 +262,15 @@ configure_pass_min_length() {
     else
       sed -i -E "s/(pam_unix\.so.*)/\1 minlen=${MIN_PASSWORD_LENGTH}/" "$pam_file"
     fi
-    log_info "pam_unix.so minlen=${MIN_PASSWORD_LENGTH} 적용"
   else
-    log_warn "pam_unix.so 엔트리를 찾지 못했습니다: $pam_file"
+    :
   fi
 }
 
 configure_pwquality() {
-  log_info "configure_pwquality 실행"
   if ! dpkg -s libpam-pwquality >/dev/null 2>&1; then
     wait_for_apt_lock
-    apt install -y libpam-pwquality || { log_warn "libpam-pwquality 설치 실패"; return 1; }
-    log_info "libpam-pwquality 설치 완료"
+    apt install -y libpam-pwquality || { echo "ERROR: libpam-pwquality 설치 실패" >&2; return 1; }
   fi
 
   local conf="/etc/security/pwquality.conf"
@@ -295,11 +286,9 @@ minlen=8
 difok=2
 enforce_for_root
 EOF
-  log_info "pwquality.conf 설정 완료 (enforce_for_root 포함)"
 }
 
 configure_pam_lockout() {
-  log_info "configure_pam_lockout 시작"
   local pam_auth="/etc/pam.d/common-auth"
   local pam_account="/etc/pam.d/common-account"
   local preauth_line="auth    required pam_faillock.so preauth silent deny=3 unlock_time=300"
@@ -309,7 +298,6 @@ configure_pam_lockout() {
 
 
   if ! command_exists faillock; then
-    log_warn "faillock 명령을 찾지 못했습니다. libpam-modules-bin을 확인하세요."
     return 0
   fi
 
@@ -342,39 +330,38 @@ configure_pam_lockout() {
   fi
 
   faillock --reset >/dev/null 2>&1 || true
-  log_info "PAM 잠금 정책을 적용했습니다."
 }
 
 # ────────────────────────────────────────────────────────────
 # U-11: sync 계정 shell을 nologin으로 변경 (삭제 대신 shell 제한)
 # ────────────────────────────────────────────────────────────
 configure_sync_shell() {
-  log_info "sync 계정 shell 변경 시작 (U-11)"
   if getent passwd sync &>/dev/null; then
-    usermod -s /usr/sbin/nologin sync \
-      && log_info "sync 계정 shell을 /usr/sbin/nologin으로 변경 완료" \
-      || log_warn "sync 계정 shell 변경 실패"
+    usermod -s /usr/sbin/nologin sync || true
   else
-    log_info "sync 계정 없음"
+    :
   fi
 }
 
 configure_su_restriction() {
-  log_info "configure_su_restriction 시작"
   local su_file="/etc/pam.d/su"
   local su_bin="/usr/bin/su"
+  local wheel_line='auth       required   pam_wheel.so use_uid group=sudo'
+  local include_line
 
-  if ! grep -Eq 'auth\s+required\s+pam_wheel.so\s+use_uid\s+group=sudo' "$su_file"; then
-    sed -i '/pam_rootok.so/a auth       required   pam_wheel.so use_uid group=sudo' "$su_file"
+  sed -i -E '/^[[:space:]]*auth[[:space:]].*pam_wheel\.so.*use_uid/d' "$su_file"
+  include_line="$(grep -n -m1 -E '^[[:space:]]*@include[[:space:]]+common-auth' "$su_file" | cut -d: -f1)"
+  if [[ -n "$include_line" ]]; then
+    sed -i "${include_line}i ${wheel_line}" "$su_file"
+  else
+    echo "$wheel_line" >> "$su_file"
   fi
 
   chgrp sudo "$su_bin"
   chmod 4750 "$su_bin"
-  log_info "su 명령을 sudo 그룹으로 제한했습니다."
 }
 
 perform_account_hardening() {
-  log_info "계정 및 인증 설정 작업 시작"
   remove_unneeded_users
   change_root_password
   change_ssh_port
@@ -385,8 +372,6 @@ perform_account_hardening() {
   configure_pam_lockout
   configure_sync_shell
   configure_su_restriction
-  log_info "계정 및 인증 설정 작업 완료"
 }
 
 perform_account_hardening
-
